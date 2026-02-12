@@ -1,0 +1,33 @@
+## Interface: 120000
+## Title: BanruoUI
+## Notes: 主题管理器（主题包=独立插件）
+## Author: BANRUO
+## Version: v1.0.7
+## SavedVariables: BanruoUIDB
+
+
+Core/Bootstrap.lua
+Core/Locale.lua
+Core/Font.lua
+Locales/zhCN.lua
+Locales/enUS.lua
+Core/Registry.lua
+Adapters/Bre.lua
+Modules/Registry.lua
+Modules/LangSwitch.lua
+Modules/ThemePreview.lua
+Modules/ElementSwitch/Container.lua
+Modules/ElementSwitch/Sub_DynamicPortraitFrame.lua
+Modules/ElementSwitch/Sub_Minimap.lua
+Modules/ElementSwitch/Sub_ActionBar.lua
+Modules/ElementSwitch/Sub_MiscDecorations.lua
+Modules/BrMusic.lua
+Modules/Placeholder.lua
+Modules/ElvuiString.lua
+Core/Init.lua
+Core/Frame.lua
+Core/Main.lua
+
+Themes/BanruoUI_NZ/Data_BRE.lua
+Themes/BanruoUI_NZ/Data_ElvUI.lua
+Themes/BanruoUI_NZ/ThemePack.lua

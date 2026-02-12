@@ -1,0 +1,67 @@
+## Interface: 120001
+## Title: Brelms
+## Notes: Standalone addon (Elms) - engine rebuild skeleton (12.0+)
+## Author: BanruoUI / BrA rebuild
+## Version: 1.13.37
+## SavedVariables: BrelmsSaved
+
+Libs/LibStub/LibStub.lua
+Libs/LibSerialize/LibSerialize.lua
+Libs/LibDeflate/LibDeflate.lua
+
+Locales/enUS.lua
+Locales/zhCN.lua
+Core/Locale.lua
+
+Core/Identity.lua
+Core/Profile.lua
+
+Core/Const.lua
+Core/ModelFileIDPresets.lua
+Core/PreviewTypes.lua
+Core/Registry.lua
+Core/Gate.lua
+Core/DrawerTemplate.lua
+Core/DrawerControls.lua
+Core/DrawerSpec_CustomMat.lua
+Core/DrawerSpec_ProgressMat.lua
+Core/DrawerSpec_Model.lua
+Core/DrawerSpec_StopMotion.lua
+Core/DrawerSpec_Actions.lua
+Core/DrawerSpec_Conditions.lua
+Core/DrawerSpec_ThemeMinimal.lua
+Core/BlankDrawerSpec.lua
+Core/PropPosSpec.lua
+Core/Linker.lua
+Core/ModuleManager.lua
+Core/Verify.lua
+Core/Schema_Element.lua
+Core/DB.lua
+Core/API_Data.lua
+Core/TreeIndex.lua
+Core/LoadState.lua
+Core/UI_Bindings.lua
+Core/TreePanel_Resize.lua
+Skins/Default.lua
+Core/Skin.lua
+Core/Render.lua
+Core/IO.lua
+Core/Actions.lua
+Core/TargetResolver.lua
+Core/TargetService.lua
+Core/AnchorRetry.lua
+Core/Move.lua
+Core/PropertyService.lua
+Core/GroupScaleService.lua
+Core/SelectionService.lua
+Core/EditGuard.lua
+Core/ViewService.lua
+Modules/CustomMat/CustomMat.lua
+Modules/ProgressMat/ProgressMat.lua
+Modules/ProgressData/ProgressData.lua
+Core/UIWhitelist.lua
+Core/UI_SizeMode.lua
+Core/UI.lua
+Core/Events.lua
+Core/Core.lua
+Bindings.xml
