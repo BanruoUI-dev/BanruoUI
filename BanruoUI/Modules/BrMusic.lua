@@ -80,8 +80,14 @@ local function CreatePage(parent)
   h:SetPoint("TOPLEFT", 16, -18)
   h:SetText(B:Loc("MODULE_BRMUSIC"))
 
+  local dev = page:CreateFontString(nil, "OVERLAY", (B.Font and B.Font:Highlight() or "GameFontHighlight"))
+  dev:SetPoint("TOPLEFT", h, "BOTTOMLEFT", 0, -10)
+  dev:SetPoint("TOPRIGHT", -16, 0)
+  dev:SetJustifyH("LEFT")
+  dev:SetText(B:Loc("BRMUSIC_DEV_HINT"))
+
   local enable = CreateToggle(page)
-  enable:SetPoint("TOPLEFT", 18, -60)
+  enable:SetPoint("TOPLEFT", 18, -86)
   page.enableCheck = enable
 
   local tip = page:CreateFontString(nil, "OVERLAY", (B.Font and B.Font:Highlight() or "GameFontHighlight"))

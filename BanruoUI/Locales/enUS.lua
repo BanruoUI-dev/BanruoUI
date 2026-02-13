@@ -23,7 +23,7 @@ L['POPUP_CONTINUE'] = 'Continue'
 L['POPUP_RESTORE_TEXT'] = [[Confirm reset to default?
 
 This will:
-- Delete the theme's existing WA content and re-import the author's defaults
+- Delete the theme's existing BrE content and re-import the author's defaults
 
 Your tweaks may be overwritten.]]
 
@@ -34,23 +34,23 @@ L["PREVIEW_NO_THEME_PACK"] = "No theme pack detected.\n\nInstall a theme-pack ad
 L["PREVIEW_AUTHOR_LINE"] = "Author: %s"
 L["PREVIEW_VERSION_LINE"] = "Version: %s"
 L["PREVIEW_INCLUDES_LINE"] = "Includes: %s"
-L["PREVIEW_INCLUDES_BRE"] = "Includes: BRE theme data"
+L["PREVIEW_INCLUDES_BRE"] = "Includes: BrE theme data"
 L["PREVIEW_INCLUDES_NONE"] = "None (display/extension only)"
 L["PREVIEW_TIP_APPLY_REQUIRED"] = "Click [Apply Theme] to take effect."
 L["PREVIEW_TIP_SWITCH_NO_OVERRIDE"] = "Normal switch won't overwrite tweaks; use [Reset] to reset."
 L["PREVIEW_TIP_ELVUI_MANUAL"] = "Note: ElvUI is not applied automatically. Import it manually in ElvUI."
-L["ERR_WA_ADAPTER_NOT_READY"] = "BRE adapter not ready"
+L["ERR_WA_ADAPTER_NOT_READY"] = "BrE adapter not ready"
 L["ERR_WA_NO_GROUPNAME"] = "groupName missing"
 L["ERR_THEME_NO_WA_REF"] = "Theme has no BRE reference"
-L["ERR_WA_REG_MISSING"] = "Missing BRE registry data (theme.bre.main)"
-L["WA_FORCE_RESTORE_OK"] = "BRE: force restored (re-imported)"
-L["WA_FIRST_IMPORT_OK"] = "BRE: first import completed"
-L["WA_HIDDEN_SWITCH_OK"] = "BRE: hidden switch (keeps tweaks)"
+L["ERR_WA_REG_MISSING"] = "Missing BrE registry data (theme.bre.main)"
+L["WA_FORCE_RESTORE_OK"] = "BrE: force restored (re-imported)"
+L["WA_FIRST_IMPORT_OK"] = "BrE: first import completed"
+L["WA_HIDDEN_SWITCH_OK"] = "BrE: hidden switch (keeps tweaks)"
 L["PRINT_NO_THEME_PACK"] = "No themes available (no theme pack)."
 L["PRINT_ALREADY_ACTIVE"] = "Theme already active."
-L["PRINT_WA_FAIL"] = "BRE: failed - %s"
+L["PRINT_WA_FAIL"] = "BrE: failed - %s"
 L["PRINT_SWITCH_OK"] = "Theme switched: %s"
-L["PRINT_WA_RESULT"] = "BRE: %s"
+L["PRINT_WA_RESULT"] = "BrE: %s"
 L["PRINT_RELOAD_SUGGEST"] = "If anything looks wrong, try /reload."
 L["PRINT_LOADED_HINT"] = "Loaded. Type /banruo to open."
 
@@ -63,6 +63,18 @@ L['MODULE_ELEMENT_SWITCH']   = 'Element Switch'
 L['MODULE_STORY_COLLECTION'] = 'Story Collection'
 L['MODULE_JUKEBOX']          = 'Jukebox'
 L['MODULE_ELVUI_STRING']     = 'ElvUI String'
+
+-- More Theme Packs / Declaration
+L['MODULE_DECLARATION'] = 'More Themes / Declaration'
+L['DECLARATION_DESC'] = [[
+Bre is developed based on the WeakAuras (WA) architecture.
+
+Since WA stopped updating on retail, this project continues development and extends features while complying with the WA open-source license.
+Thanks to the WA project.
+]]
+L['DECLARATION_GITHUB'] = 'GitHub'
+L['DECLARATION_BILIBILI'] = 'More Theme Bilibili'
+L['DECLARATION_YOUTUBE'] = 'More Theme YouTube'
 
 -- Element Switch - Dynamic Portrait Frame
 L['ES_DPF_TITLE'] = 'Dynamic Portrait Frame'
@@ -141,6 +153,7 @@ L["ES_MISC_DECOR_8"] = "Decoration VIII"
 L['MODULE_BRMUSIC'] = 'BrMusic'
 L['BRMUSIC_ENABLE'] = 'Enable BrMusic'
 L['BRMUSIC_ENABLE_TIP'] = 'Disables features only. To fully disable, disable BrMusic in AddOns and /reload.'
+L['BRMUSIC_DEV_HINT'] = 'In development. Coming soon.'
 L['BRMUSIC_BTN_PLAY_TIP'] = 'Play'
 L['BRMUSIC_BTN_STOP_TIP'] = 'Stop'
 L['BRMUSIC_BTN_NEXT_TIP'] = 'Next'

@@ -2,7 +2,7 @@
 ## Title: BanruoUI
 ## Notes: 主题管理器（主题包=独立插件）
 ## Author: BANRUO
-## Version: v1.0.7
+## Version: v2.0.10
 ## SavedVariables: BanruoUIDB
 
 
@@ -24,6 +24,7 @@ Modules/ElementSwitch/Sub_MiscDecorations.lua
 Modules/BrMusic.lua
 Modules/Placeholder.lua
 Modules/ElvuiString.lua
+Modules/Declaration.lua
 Core/Init.lua
 Core/Frame.lua
 Core/Main.lua
