@@ -170,8 +170,6 @@ function M:CommitOffsets(payload)
   local yo = tonumber(payload.yOffset)
   if not xo then xo = 0 end
   if not yo then yo = 0 end
-  xo = math.floor(xo + 0.5)
-  yo = math.floor(yo + 0.5)
   if xo < -4096 then xo = -4096 end
   if xo > 4096 then xo = 4096 end
   if yo < -4096 then yo = -4096 end
@@ -1117,35 +1115,68 @@ function M:ApplyElement(id, el)
     local powerType = nil
     
     -- Map PROG_TYPE_* to sourceType
-    local typeMap = {
-      PROG_TYPE_HEALTH = "Health",
-      PROG_TYPE_MANA = "Mana",
-      PROG_TYPE_ENERGY = "Energy",
-      PROG_TYPE_RAGE = "Rage",
-      PROG_TYPE_FOCUS = "Focus",
-      PROG_TYPE_RUNIC_POWER = "RunicPower",
-      PROG_TYPE_INSANITY = "Insanity",
-      PROG_TYPE_LUNAR_POWER = "LunarPower",
-      PROG_TYPE_FURY = "Fury",
-      PROG_TYPE_PAIN = "Pain",
-      PROG_TYPE_MAELSTROM = "Maelstrom",
-    }
-    
-    -- Map sourceType to Enum.PowerType index
-    local powerTypeMap = {
-      Mana = 0,
-      Energy = 3,
-      Rage = 1,
-      Focus = 2,
-      RunicPower = 6,
-      Insanity = 13,
-      LunarPower = 8,
-      Fury = 17,
-      Pain = 18,
-      Maelstrom = 11,
-    }
-    
-    sourceType = typeMap[progressType] or "Health"
+local typeMap = {
+  PROG_TYPE_HEALTH = "Health",
+  PROG_TYPE_MANA = "Mana",
+  PROG_TYPE_ENERGY = "Energy",
+  PROG_TYPE_RAGE = "Rage",
+  PROG_TYPE_FOCUS = "Focus",
+  PROG_TYPE_RUNIC_POWER = "RunicPower",
+  PROG_TYPE_INSANITY = "Insanity",
+  PROG_TYPE_LUNAR_POWER = "LunarPower",
+  PROG_TYPE_FURY = "Fury",
+  PROG_TYPE_MAELSTROM = "Maelstrom",
+  PROG_TYPE_CHI = "Chi",
+  -- Extra (may not be in dropdown yet, but supported)
+  PROG_TYPE_HOLY_POWER = "HolyPower",
+}
+
+-- Map sourceType to Enum.PowerType index
+local powerTypeMap = {
+  Mana = 0,
+  Energy = 3,
+  Rage = 1,
+  Focus = 2,
+  RunicPower = 6,
+  Insanity = 13,
+  LunarPower = 8,
+  Fury = 17,
+  Maelstrom = 11,
+  Chi = 12,
+  HolyPower = 9,
+}
+
+-- v2.0.5: Class-based power type (auto)
+local function _ResolveClassPower(unit)
+  unit = unit or "player"
+  local _, classFile = UnitClass(unit)
+  -- If class is unavailable (e.g. target is NPC), fallback to Mana
+  if not classFile or classFile == "" then
+    return "Mana"
+  end
+
+  local classMap = {
+    WARRIOR      = "Rage",
+    PALADIN      = "HolyPower",
+    HUNTER       = "Focus",
+    ROGUE        = "Energy",
+    PRIEST       = "Mana",
+    DEATHKNIGHT  = "RunicPower",
+    SHAMAN       = "Mana",
+    MAGE         = "Mana",
+    WARLOCK      = "Mana",
+    DRUID        = "Mana",
+    MONK         = "Mana",
+    DEMONHUNTER  = "Fury",
+  }
+  return classMap[classFile] or "Mana"
+end
+
+if progressType == "PROG_TYPE_CLASS_POWER" then
+  sourceType = _ResolveClassPower(progressUnit)
+else
+  sourceType = typeMap[progressType] or "Health"
+end
     
     if PD then
       if sourceType == "Health" and PD.GetHealthValues then
@@ -1575,25 +1606,57 @@ yBox:SetScript("OnEditFocusLost", nil)
 yBox:SetScript("OnTextChanged", nil)
 xLeft:SetScript("OnClick", function()
   local x, y = _readCurrentXY()
-  _applyXYFromControls((tonumber(x) or 0) - (f._nudgeStep or 1), y)
+  local id = M._activeElementId
+  local nx = (tonumber(x) or 0) - (f._nudgeStep or 1)
+  local ny = (tonumber(y) or 0)
+  _applyXYFromControls(nx, ny)
+  -- Persist like MouseUp: props.xOffset/yOffset is the single source of truth.
+  if id then
+    M:CommitOffsets({ id = id, xOffset = nx, yOffset = ny })
+    local UI = _UI()
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
   _syncXYToControls()
 end)
 xRight:SetScript("OnClick", function()
   local x, y = _readCurrentXY()
-  _applyXYFromControls((tonumber(x) or 0) + (f._nudgeStep or 1), y)
+  local id = M._activeElementId
+  local nx = (tonumber(x) or 0) + (f._nudgeStep or 1)
+  local ny = (tonumber(y) or 0)
+  _applyXYFromControls(nx, ny)
+  if id then
+    M:CommitOffsets({ id = id, xOffset = nx, yOffset = ny })
+    local UI = _UI()
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
   _syncXYToControls()
 end)
 yUp:SetScript("OnClick", function()
   local x, y = _readCurrentXY()
-  _applyXYFromControls(x, (tonumber(y) or 0) + (f._nudgeStep or 1))
+  local id = M._activeElementId
+  local nx = (tonumber(x) or 0)
+  local ny = (tonumber(y) or 0) + (f._nudgeStep or 1)
+  _applyXYFromControls(nx, ny)
+  if id then
+    M:CommitOffsets({ id = id, xOffset = nx, yOffset = ny })
+    local UI = _UI()
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
   _syncXYToControls()
 end)
 yDown:SetScript("OnClick", function()
   local x, y = _readCurrentXY()
-  _applyXYFromControls(x, (tonumber(y) or 0) - (f._nudgeStep or 1))
+  local id = M._activeElementId
+  local nx = (tonumber(x) or 0)
+  local ny = (tonumber(y) or 0) - (f._nudgeStep or 1)
+  _applyXYFromControls(nx, ny)
+  if id then
+    M:CommitOffsets({ id = id, xOffset = nx, yOffset = ny })
+    local UI = _UI()
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
   _syncXYToControls()
 end)
-
 f._xWrap, f._yWrap = xWrap, yWrap
 f._xBox, f._yBox = xBox, yBox
 f._syncXYToControls = _syncXYToControls
@@ -1805,22 +1868,34 @@ yBox:Hide(); yBox:EnableMouse(false); yBox:SetEnabled(false)
         if el then
           normPos(el)
           local x, y = getXY(el)
-          setXY(el, (x or 0) + dx, (y or 0) + dy)
+          local nx, ny = (x or 0) + dx, (y or 0) + dy
+          setXY(el, nx, ny)
+
+          -- Persist: props.xOffset/yOffset is the single source of truth.
+          el.props = type(el.props) == "table" and el.props or {}
+          local xo = tonumber(el.props.xOffset)
+          local yo = tonumber(el.props.yOffset)
+          if xo == nil or yo == nil then
+            xo = xo == nil and (tonumber(x) or 0) or xo
+            yo = yo == nil and (tonumber(y) or 0) or yo
+          end
+          M:CommitOffsets({ id = id, xOffset = (xo or 0) + dx, yOffset = (yo or 0) + dy })
 
           -- lightweight runtime move (avoid trails)
           local r = (M._regions and M._regions[id]) or nil
           if r then
             r:ClearAllPoints()
-            r:SetPoint("CENTER", UIParent, "CENTER", (x or 0) + dx, (y or 0) + dy)
+            r:SetPoint("CENTER", UIParent, "CENTER", nx, ny)
           else
             pcall(M.Refresh, M, id)
           end
-
-            local UI = _UI()
-  if UI and UI._OnElementMoved then
-                pcall(UI._OnElementMoved, UI, id)
-          end
         end
+      end
+
+      -- Refresh right panel display (silent)
+      local UI = _UI()
+      if UI and UI.RefreshRight then
+        pcall(UI.RefreshRight, UI)
       end
     end
   end

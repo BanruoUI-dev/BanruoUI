@@ -1,4 +1,4 @@
-## Interface: 120000
+## Interface: 120000,120001
 ## Title: BanruoUI_options
 ## Notes: Options panel for BanruoUI_elms (BanruoUI)
 ## Author: BanruoUI

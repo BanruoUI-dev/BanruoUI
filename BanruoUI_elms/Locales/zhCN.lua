@@ -202,13 +202,13 @@ NEW_BTN_PET = "3D小宠物",
   -- Power types (已启用)
   PROG_TYPE_MANA = "法力值",
   PROG_TYPE_ENERGY = "能量",
+  PROG_TYPE_CLASS_POWER = "能量（根据职业）",
   PROG_TYPE_RAGE = "怒气",
   PROG_TYPE_FOCUS = "集中值",
   PROG_TYPE_RUNIC_POWER = "符文能量",
-  PROG_TYPE_INSANITY = "疯狂值",
+  PROG_TYPE_INSANITY = "狂乱值",
   PROG_TYPE_LUNAR_POWER = "星界能量",
   PROG_TYPE_FURY = "魔怒",
-  PROG_TYPE_PAIN = "痛苦",
   PROG_TYPE_MAELSTROM = "漩涡值",
   
   -- Power types (预留 - 需UI模板)

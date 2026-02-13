@@ -1,8 +1,8 @@
-## Interface: 120000
+## Interface: 120000,120001
 ## Title: BanruoUI_elms
 ## Notes: BanruoUI child plugin (Elms) - engine rebuild skeleton (12.0+)
 ## Author: BanruoUI / BrA rebuild
-## Version: 1.13.41
+## Version: 1.13.46
 ## SavedVariables: BreSaved
 
 Libs/LibStub/LibStub.lua

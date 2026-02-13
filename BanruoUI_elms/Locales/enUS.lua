@@ -199,13 +199,13 @@ NEW_BTN_PET = "3D Pet",
   -- Power types (已启用)
   PROG_TYPE_MANA = "Mana",
   PROG_TYPE_ENERGY = "Energy",
+  PROG_TYPE_CLASS_POWER = "Class Power (Auto)",
   PROG_TYPE_RAGE = "Rage",
   PROG_TYPE_FOCUS = "Focus",
   PROG_TYPE_RUNIC_POWER = "Runic Power",
   PROG_TYPE_INSANITY = "Insanity",
   PROG_TYPE_LUNAR_POWER = "Lunar Power",
   PROG_TYPE_FURY = "Fury",
-  PROG_TYPE_PAIN = "Pain",
   PROG_TYPE_MAELSTROM = "Maelstrom",
   
   -- Power types (预留 - 需UI模板)

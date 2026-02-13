@@ -3553,8 +3553,8 @@ if eg and eg.RunGuarded then
 
           if m._OffsetDetach then m:_OffsetDetach() end
           m._updatingOffset = true
-          if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetObeyStepOnDrag(true); m.xOff:SetValue(0) end
-          if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetObeyStepOnDrag(true); m.yOff:SetValue(0) end
+          if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetObeyStepOnDrag(true); m.xOff:SetValue(0) end
+          if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetObeyStepOnDrag(true); m.yOff:SetValue(0) end
           if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
           if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
           m._updatingOffset = false
@@ -3568,13 +3568,13 @@ if eg and eg.RunGuarded then
           if m.xOff then
             -- Range will be finalized in Step4; keep a safe, wide range for now.
             m.xOff:SetMinMaxValues(-4096, 4096)
-            m.xOff:SetValueStep(1)
+            m.xOff:SetValueStep(0.5)
             m.xOff:SetObeyStepOnDrag(true)
             m.xOff:SetValue(xo)
           end
           if m.yOff then
             m.yOff:SetMinMaxValues(-4096, 4096)
-            m.yOff:SetValueStep(1)
+            m.yOff:SetValueStep(0.5)
             m.yOff:SetObeyStepOnDrag(true)
             m.yOff:SetValue(yo)
           end
@@ -3622,8 +3622,8 @@ if eg and eg.RunGuarded then
 
           if m._OffsetDetach then m:_OffsetDetach() end
           m._updatingOffset = true
-          if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetValue(0) end
-          if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetValue(0) end
+          if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetValue(0) end
+          if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetValue(0) end
           if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
           if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
           m._updatingOffset = false
@@ -3663,8 +3663,8 @@ if eg and eg.RunGuarded then
         -- refresh position UI to safe defaults without any commit side effects
         if m._OffsetDetach then m:_OffsetDetach() end
         m._updatingOffset = true
-        if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetValue(0) end
-        if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetValue(0) end
+        if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetValue(0) end
+        if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetValue(0) end
         if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
         if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
         m._updatingOffset = false
@@ -4003,8 +4003,8 @@ if ep and ep._elemMat and ep._activeDrawerId == "CustomMat" then
 
       if m._OffsetDetach then m:_OffsetDetach() end
       m._updatingOffset = true
-      if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetObeyStepOnDrag(true); m.xOff:SetValue(0) end
-      if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetObeyStepOnDrag(true); m.yOff:SetValue(0) end
+      if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetObeyStepOnDrag(true); m.xOff:SetValue(0) end
+      if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetObeyStepOnDrag(true); m.yOff:SetValue(0) end
       if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
       if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
       m._updatingOffset = false
@@ -4018,13 +4018,13 @@ if ep and ep._elemMat and ep._activeDrawerId == "CustomMat" then
       if m.xOff then
         -- Range will be finalized in Step4; keep a safe, wide range for now.
         m.xOff:SetMinMaxValues(-4096, 4096)
-        m.xOff:SetValueStep(1)
+        m.xOff:SetValueStep(0.5)
         m.xOff:SetObeyStepOnDrag(true)
         m.xOff:SetValue(xo)
       end
       if m.yOff then
         m.yOff:SetMinMaxValues(-4096, 4096)
-        m.yOff:SetValueStep(1)
+        m.yOff:SetValueStep(0.5)
         m.yOff:SetObeyStepOnDrag(true)
         m.yOff:SetValue(yo)
       end
@@ -4072,8 +4072,8 @@ if ep and ep._elemMat and ep._activeDrawerId == "CustomMat" then
 
       if m._OffsetDetach then m:_OffsetDetach() end
       m._updatingOffset = true
-      if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetValue(0) end
-      if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetValue(0) end
+      if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetValue(0) end
+      if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetValue(0) end
       if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
       if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
       m._updatingOffset = false
@@ -4113,8 +4113,8 @@ if ep and ep._elemMat and ep._activeDrawerId == "CustomMat" then
     -- refresh position UI to safe defaults without any commit side effects
     if m._OffsetDetach then m:_OffsetDetach() end
     m._updatingOffset = true
-    if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(1); m.xOff:SetValue(0) end
-    if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(1); m.yOff:SetValue(0) end
+    if m.xOff then m.xOff:SetMinMaxValues(-4096, 4096); m.xOff:SetValueStep(0.5); m.xOff:SetValue(0) end
+    if m.yOff then m.yOff:SetMinMaxValues(-4096, 4096); m.yOff:SetValueStep(0.5); m.yOff:SetValue(0) end
     if m.xNum and m.xNum.SetText then m.xNum:SetText("0") end
     if m.yNum and m.yNum.SetText then m.yNum:SetText("0") end
     m._updatingOffset = false
@@ -6111,7 +6111,7 @@ end
     end
     mSize._updatingSize = true
     sb:SetValue(v)
-    eb:SetText(tostring(v))
+    eb:SetText(_FmtOffset(v))
     mSize._updatingSize = false
     _commitSize()
     UI:RefreshRight()
@@ -6243,10 +6243,20 @@ do
     local function _ClampOffset(v)
       v = tonumber(v)
       if not v then return nil end
-      v = math.floor(v + 0.5)
       if v < -4096 then v = -4096 end
       if v > 4096 then v = 4096 end
       return v
+    end
+
+    local function _FmtOffset(v)
+      v = tonumber(v) or 0
+      if v < -4096 then v = -4096 end
+      if v > 4096 then v = 4096 end
+      local iv = math.floor(v)
+      if math.abs(v - iv) < 1e-9 then
+        return tostring(iv)
+      end
+      return string.format("%.1f", v)
     end
 
     local function _syncOffsetFromSliders()
@@ -6256,8 +6266,8 @@ do
       xo = _ClampOffset(xo) or 0
       yo = _ClampOffset(yo) or 0
       mPos._updatingOffset = true
-      if mPos.xNum and mPos.xNum.SetText then mPos.xNum:SetText(tostring(xo)) end
-      if mPos.yNum and mPos.yNum.SetText then mPos.yNum:SetText(tostring(yo)) end
+      if mPos.xNum and mPos.xNum.SetText then mPos.xNum:SetText(_FmtOffset(xo)) end
+      if mPos.yNum and mPos.yNum.SetText then mPos.yNum:SetText(_FmtOffset(yo)) end
       mPos._updatingOffset = false
     end
 
@@ -6290,7 +6300,7 @@ do
       end
       mPos._updatingOffset = true
       sb:SetValue(v)
-      eb:SetText(tostring(v))
+      eb:SetText(_FmtOffset(v))
       mPos._updatingOffset = false
       _commitOffset()
       UI:RefreshRight()

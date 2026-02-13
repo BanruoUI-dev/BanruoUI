@@ -32,6 +32,21 @@ Bre.DrawerTemplate = Bre.DrawerTemplate or {
 local DT = Bre.DrawerTemplate
 
 -- ------------------------------------------------------------
+-- Offset formatting helper (file-local)
+-- - Keep precision (support .5 etc.) to avoid edge snap on reload.
+-- - Never export to _G (not a public contract).
+local function _FmtOffset(v)
+  v = tonumber(v) or 0
+  if v < -4096 then v = -4096 elseif v > 4096 then v = 4096 end
+  local iv = math.floor(v)
+  if math.abs(v - iv) < 1e-9 then
+    return tostring(iv)
+  end
+  return string.format("%.1f", v)
+end
+
+
+-- ------------------------------------------------------------
 -- Layout Constants (Constitution Article 16: UI Specification Hard Limits)
 -- These values are ENFORCED and cannot be overridden by individual drawers.
 -- Step9 FINAL: Optimized layout with confirmed alignment
@@ -473,14 +488,14 @@ function DT:_BuildPositionSection(content, startY)
   xNum:SetText("0")
   local xSlider = DC:MakeSlider(content, L.COL1_X, y - L.LABEL_TO_CONTROL)
   xSlider:SetMinMaxValues(-4096, 4096)
-  xSlider:SetValueStep(1)
+  xSlider:SetValueStep(0.5)
   
   DC:MakeLabel(content, "ELEM_MAT_YOFF", L.COL2_X, y)
   local yNum = DC:MakeNumericBox(content, L.COL2_X + 52, y - 2)
   yNum:SetText("0")
   local ySlider = DC:MakeSlider(content, L.COL2_X, y - L.LABEL_TO_CONTROL)
   ySlider:SetMinMaxValues(-4096, 4096)
-  ySlider:SetValueStep(1)
+  ySlider:SetValueStep(0.5)
   
   -- Step10: Store all controls
   local scroll = content:GetParent()
@@ -1378,20 +1393,27 @@ function DT:_RefreshPosition(controls, data, nodeId)
     controls.xSlider:SetValue(xOffset)
   end
   if controls.xNum then
-    controls.xNum:SetText(tostring(math.floor(xOffset + 0.5)))
+    controls.xNum:SetText(_FmtOffset(xOffset))
   end
   if controls.ySlider then
     controls.ySlider:SetValue(yOffset)
   end
   if controls.yNum then
-    controls.yNum:SetText(tostring(math.floor(yOffset + 0.5)))
+    controls.yNum:SetText(_FmtOffset(yOffset))
   end
 end
 
 
 -- API: Wire event handlers for drawer controls
 function DT:WireEvents(drawer, nodeId)
-  if not drawer or not drawer._spec then return end
+  local function _ClampOffset(v)
+    v = tonumber(v)
+    if not v then return nil end
+    if v < -4096 then v = -4096 elseif v > 4096 then v = 4096 end
+    return v
+  end
+
+    if not drawer or not drawer._spec then return end
   
   local controls = drawer._controls or {}
   
@@ -2370,9 +2392,10 @@ function DT:_WireProgressMatEvents(drawer, controls)
         if UI and UI.RefreshRight then UI:RefreshRight() end
       end
       
-      -- v2.18.13: All 10 power types + Health
+      -- v2.0.6: Power types + Health
       local powerTypes = {
         {value = "PROG_TYPE_HEALTH", textKey = "PROG_TYPE_HEALTH"},
+        {value = "PROG_TYPE_CLASS_POWER", textKey = "PROG_TYPE_CLASS_POWER"},
         {value = "PROG_TYPE_MANA", textKey = "PROG_TYPE_MANA"},
         {value = "PROG_TYPE_ENERGY", textKey = "PROG_TYPE_ENERGY"},
         {value = "PROG_TYPE_RAGE", textKey = "PROG_TYPE_RAGE"},
@@ -2381,8 +2404,8 @@ function DT:_WireProgressMatEvents(drawer, controls)
         {value = "PROG_TYPE_INSANITY", textKey = "PROG_TYPE_INSANITY"},
         {value = "PROG_TYPE_LUNAR_POWER", textKey = "PROG_TYPE_LUNAR_POWER"},
         {value = "PROG_TYPE_FURY", textKey = "PROG_TYPE_FURY"},
-        {value = "PROG_TYPE_PAIN", textKey = "PROG_TYPE_PAIN"},
         {value = "PROG_TYPE_MAELSTROM", textKey = "PROG_TYPE_MAELSTROM"},
+        {value = "PROG_TYPE_CHI", textKey = "PROG_TYPE_CHI"},
       }
       
       for _, opt in ipairs(powerTypes) do
@@ -2745,7 +2768,7 @@ function DT:_WireAttributeEvents(drawer, controls)
       local val = self:GetValue()
       _previewRot(val)
       drawer._updatingRot = true
-      numBox:SetText(tostring(math.floor(val + 0.5)))
+      numBox:SetText(_FmtOffset(val))
       drawer._updatingRot = false
     end)
     
@@ -2760,7 +2783,7 @@ function DT:_WireAttributeEvents(drawer, controls)
       if v < -180 then v = -180 elseif v > 180 then v = 180 end
       drawer._updatingRot = true
       slider:SetValue(v)
-      numBox:SetText(tostring(math.floor(v + 0.5)))
+      numBox:SetText(_FmtOffset(v))
       drawer._updatingRot = false
       _commitRot(v)
     end
@@ -2854,7 +2877,7 @@ function DT:_WireAttributeEvents(drawer, controls)
     slider:SetScript("OnValueChanged", function(self)
       if drawer._updatingHeight then return end
       drawer._updatingHeight = true
-      numBox:SetText(tostring(math.floor(self:GetValue() + 0.5)))
+      numBox:SetText(_FmtOffset(self:GetValue()))
       drawer._updatingHeight = false
     end)
     
@@ -2865,7 +2888,7 @@ function DT:_WireAttributeEvents(drawer, controls)
       if v < 1 then v = 1 elseif v > 2048 then v = 2048 end
       drawer._updatingHeight = true
       slider:SetValue(v)
-      numBox:SetText(tostring(math.floor(v + 0.5)))
+      numBox:SetText(_FmtOffset(v))
       drawer._updatingHeight = false
       local w = controls.wSlider and controls.wSlider:GetValue() or 300
       _commitSize(w, v)
@@ -2906,7 +2929,7 @@ function DT:_WireAttributeEvents(drawer, controls)
     slider:SetScript("OnValueChanged", function(self)
       if drawer._updatingWidth then return end
       drawer._updatingWidth = true
-      numBox:SetText(tostring(math.floor(self:GetValue() + 0.5)))
+      numBox:SetText(_FmtOffset(self:GetValue()))
       drawer._updatingWidth = false
     end)
     
@@ -2917,7 +2940,7 @@ function DT:_WireAttributeEvents(drawer, controls)
       if v < 1 then v = 1 elseif v > 2048 then v = 2048 end
       drawer._updatingWidth = true
       slider:SetValue(v)
-      numBox:SetText(tostring(math.floor(v + 0.5)))
+      numBox:SetText(_FmtOffset(v))
       drawer._updatingWidth = false
       local h = controls.hSlider and controls.hSlider:GetValue() or 300
       _commitSize(v, h)
@@ -3061,7 +3084,7 @@ function DT:_WirePositionEvents(drawer, controls)
     slider:SetScript("OnValueChanged", function(self)
       if drawer._updatingXOffset then return end
       drawer._updatingXOffset = true
-      numBox:SetText(tostring(math.floor(self:GetValue() + 0.5)))
+      numBox:SetText(_FmtOffset(self:GetValue()))
       drawer._updatingXOffset = false
     end)
     
@@ -3072,7 +3095,7 @@ function DT:_WirePositionEvents(drawer, controls)
       if v < -4096 then v = -4096 elseif v > 4096 then v = 4096 end
       drawer._updatingXOffset = true
       slider:SetValue(v)
-      numBox:SetText(tostring(math.floor(v + 0.5)))
+      numBox:SetText(_FmtOffset(v))
       drawer._updatingXOffset = false
       local y = controls.ySlider and controls.ySlider:GetValue() or 0
       _commitOffset(v, y)
@@ -3121,7 +3144,7 @@ function DT:_WirePositionEvents(drawer, controls)
     slider:SetScript("OnValueChanged", function(self)
       if drawer._updatingYOffset then return end
       drawer._updatingYOffset = true
-      numBox:SetText(tostring(math.floor(self:GetValue() + 0.5)))
+      numBox:SetText(_FmtOffset(self:GetValue()))
       drawer._updatingYOffset = false
     end)
     
@@ -3132,7 +3155,7 @@ function DT:_WirePositionEvents(drawer, controls)
       if v < -4096 then v = -4096 elseif v > 4096 then v = 4096 end
       drawer._updatingYOffset = true
       slider:SetValue(v)
-      numBox:SetText(tostring(math.floor(v + 0.5)))
+      numBox:SetText(_FmtOffset(v))
       drawer._updatingYOffset = false
       local x = controls.xSlider and controls.xSlider:GetValue() or 0
       _commitOffset(x, v)
