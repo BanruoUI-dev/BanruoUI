@@ -1,0 +1,12 @@
+## Interface: 120000
+## Title: BanruoUI_options
+## Notes: Options panel for BanruoUI_elms (BanruoUI)
+## Author: BanruoUI
+## Version: v2.14.47
+## RequiredDeps: BanruoUI_elms
+## LoadOnDemand: 1
+
+Core/Options.lua
+Dev/FixtureTree.lua
+Dev/FixtureTreeIndex.lua
+Dev/DevCheck.lua

@@ -1,0 +1,12 @@
+## Interface: 120001,120000
+## Title: BanruoUI_theme_ 内置主题包
+## Notes: BANRUOUI[NZ]
+## Author: BanruoUI
+## Version: 1.3
+## RequiredDeps: BanruoUI
+
+
+Data_BrE.lua
+Data_ElvUI.lua
+ThemePack.lua
+

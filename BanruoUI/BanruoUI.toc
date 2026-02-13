@@ -28,6 +28,3 @@ Core/Init.lua
 Core/Frame.lua
 Core/Main.lua
 
-Themes/BanruoUI_NZ/Data_BRE.lua
-Themes/BanruoUI_NZ/Data_ElvUI.lua
-Themes/BanruoUI_NZ/ThemePack.lua
