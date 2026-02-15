@@ -2,7 +2,7 @@
 ## Title: BanruoUI_elms
 ## Notes: BanruoUI child plugin (Elms) - engine rebuild skeleton (12.0+)
 ## Author: BanruoUI / BrA rebuild
-## Version: 2.0.9
+## Version: v2.0.13
 ## SavedVariables: BreSaved
 
 Libs/LibStub/LibStub.lua

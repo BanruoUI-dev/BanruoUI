@@ -14,12 +14,15 @@ local P = Bre.Profile
 
 -- Priority:
 -- 1) Explicit global override (packaging / dev): _G.BRE_BUILD_PROFILE = "DEV" | "THEME" | "FULL"
--- 2) Addon folder name heuristic: "Brelms" => FULL, otherwise DEV
+-- 2) Default (BanruoUI child): THEME
+--
+-- NOTE: We intentionally DO NOT use addon folder name heuristics like "Brelms" => FULL.
+-- DEV/FULL are entered explicitly via Profile:SetMode(...).
 local override = _G.BRE_BUILD_PROFILE
 if override == "FULL" or override == "THEME" or override == "DEV" then
   P.id = override
 else
-  P.id = (addonName == "Brelms") and "FULL" or "DEV"
+  P.id = "THEME"
 end
 
 function P:IsDev() return self.id == "DEV" end
@@ -39,13 +42,10 @@ function P:AllowAuthoringUI()
 end
 
 -- Slash contract per 分包文档:
--- DEV   : /bres
--- THEME : /brt
--- FULL  : /bre
+-- Slash command (stable):
+-- Always register /bre (regardless of DEV/THEME/FULL).
 function P:GetSlashCommand()
-  if self:IsFull() then return "/bre" end
-  if self:IsTheme() then return "/brt" end
-  return "/bres"
+  return "/bre"
 end
 
 
@@ -98,7 +98,7 @@ function P:Apply(ui)
   -- 1) SizeMode + LayoutPreset
   if U then
     -- Profile rule:
-    -- THEME => COMPACT (560x560) + THEME_320_240 layout
+    -- THEME => COMPACT (560x560) + THEME_310_250 layout
     -- DEV/FULL => LEGACY (original size) + LEGACY_DEFAULT layout
     if mode == "THEME" then
       if U.SetLayoutPreset then pcall(function() U:SetLayoutPreset("THEME_320_240") end) end

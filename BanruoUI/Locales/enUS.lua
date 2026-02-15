@@ -34,7 +34,7 @@ L["PREVIEW_NO_THEME_PACK"] = "No theme pack detected.\n\nInstall a theme-pack ad
 L["PREVIEW_AUTHOR_LINE"] = "Author: %s"
 L["PREVIEW_VERSION_LINE"] = "Version: %s"
 L["PREVIEW_INCLUDES_LINE"] = "Includes: %s"
-L["PREVIEW_INCLUDES_BRE"] = "Includes: BrE theme data"
+L["PREVIEW_INCLUDES_BRE"] = " BrE theme data"
 L["PREVIEW_INCLUDES_NONE"] = "None (display/extension only)"
 L["PREVIEW_TIP_APPLY_REQUIRED"] = "Click [Apply Theme] to take effect."
 L["PREVIEW_TIP_SWITCH_NO_OVERRIDE"] = "Normal switch won't overwrite tweaks; use [Reset] to reset."
@@ -60,17 +60,18 @@ L['MODULE_THEME_PREVIEW'] = 'Theme Preview'
 
 -- Step4: module titles + ElementSwitch UI bits
 L['MODULE_ELEMENT_SWITCH']   = 'Element Switch'
-L['MODULE_STORY_COLLECTION'] = 'Story Collection'
+L['MODULE_STORY_COLLECTION'] = 'Tarot'
 L['MODULE_JUKEBOX']          = 'Jukebox'
 L['MODULE_ELVUI_STRING']     = 'ElvUI String'
 
--- More Theme Packs / Declaration
-L['MODULE_DECLARATION'] = 'More Themes / Declaration'
+-- Themes & Notice
+L['MODULE_DECLARATION'] = 'Themes & Notice'
 L['DECLARATION_DESC'] = [[
 Bre is developed based on the WeakAuras (WA) architecture.
 
 Since WA stopped updating on retail, this project continues development and extends features while complying with the WA open-source license.
-Thanks to the WA project.
+Thanks to the WA project. 
+Mode Code: /run Bre.Profile:SetMode("FULL")
 ]]
 L['DECLARATION_GITHUB'] = 'GitHub'
 L['DECLARATION_BILIBILI'] = 'More Theme Bilibili'
@@ -83,20 +84,20 @@ L['ES_DPF_BG']    = 'Backdrop'
 
 L['ES_MM_TITLE'] = 'Minimap'
 L['ES_MM_FRAME'] = 'Border'
-L['ES_MM_BG']    = 'Background'
+L['ES_MM_BG']    = 'BG'
 
 -- Element Switch - Action Bar
 L['ES_AB_TITLE']        = 'Action Bar'
-L['ES_AB_BG']           = 'Background'
-L['ES_AB_ORB_R']        = 'Right Orb'
-L['ES_AB_ORB_R_DECOR']  = 'Right Orb Decor'
-L['ES_AB_ORB_L']        = 'Left Orb'
-L['ES_AB_ORB_L_DECOR']  = 'Left Orb Decor'
+L['ES_AB_BG']           = 'BG'
+L['ES_AB_ORB_R']        = 'Orb(R)'
+L['ES_AB_ORB_R_DECOR']  = 'Statue (R)'
+L['ES_AB_ORB_L']        = 'Orb(L)'
+L['ES_AB_ORB_L_DECOR']  = 'Statue (L)'
 
 -- Element Switch: Misc Decorations
 L['ES_MISC_TITLE']       = 'Misc Decorations'
 L['ES_MISC_TRIM_TOP']    = 'Top Trim'
-L['ES_MISC_TRIM_BOTTOM'] = 'Bottom Trim'
+L['ES_MISC_TRIM_BOTTOM'] = 'Bottom'
 L['ES_MISC_DECOR_1']     = 'Decor I'
 L['ES_MISC_DECOR_2']     = 'Decor II'
 L['ES_MISC_DECOR_3']     = 'Decor III'
@@ -129,25 +130,25 @@ L['TEXT_PLACEHOLDER_UNAVAILABLE'] = 'Unavailable / Coming soon.'
 -- Ensure B.L points to the filled locale tables before modules register titles.
 if B and B.ApplyLocale then B:ApplyLocale() end
 
-L["ELEMENT_3D_PORTRAIT"] = "3D Character"
+L["ELEMENT_3D_PORTRAIT"] = "Model"
 
-L["ES_DPF_PORTRAIT"] = "3D Character"
+L["ES_DPF_PORTRAIT"] = "Model"
 
-L["ES_DECOR_V"] = "Decoration V"
+L["ES_DECOR_V"] = "Decor V"
 
-L["ES_DECOR_VI"] = "Decoration VI"
+L["ES_DECOR_VI"] = "Decor VI"
 
-L["ES_DECOR_VII"] = "Decoration VII"
+L["ES_DECOR_VII"] = "Decor VII"
 
-L["ES_DECOR_VIII"] = "Decoration VIII"
+L["ES_DECOR_VIII"] = "Decor VIII"
 
-L["ES_MISC_DECOR_5"] = "Decoration V"
+L["ES_MISC_DECOR_5"] = "Decor V"
 
-L["ES_MISC_DECOR_6"] = "Decoration VI"
+L["ES_MISC_DECOR_6"] = "Decor VI"
 
-L["ES_MISC_DECOR_7"] = "Decoration VII"
+L["ES_MISC_DECOR_7"] = "Decor VII"
 
-L["ES_MISC_DECOR_8"] = "Decoration VIII"
+L["ES_MISC_DECOR_8"] = "Decor VIII"
 
 -- BrMusic
 L['MODULE_BRMUSIC'] = 'BrMusic'

@@ -1155,16 +1155,6 @@ function DT:_RefreshProgressMat(controls, data, nodeId)
     UIDropDownMenu_SetText(controls.progressDirection, _L(textKey))
   end
   
-  -- Fade checkbox
-  if controls.fade then
-    controls.fade:SetChecked(data.fade and true or false)
-  end
-  
-  -- Mirror checkbox
-  if controls.mirror then
-    controls.mirror:SetChecked(data.mirror and true or false)
-  end
-  
   -- Foreground color button
   if controls.fgColor and controls.fgColor.SetColor then
     local c = data.fgColor or {r=1, g=1, b=1, a=1}
@@ -1380,7 +1370,10 @@ function DT:_RefreshPosition(controls, data, nodeId)
       AUTO = _L("ELEM_MAT_FRAME_LEVEL_AUTO"),
     }
     
-    local text = strataTextMap[displayStrata] or strataTextMap.AUTO
+    local text = strataTextMap[displayStrata]
+    if not text then
+       text = strataTextMap.AUTO
+    end
     UIDropDownMenu_SetText(strataDD, text)
     UIDropDownMenu_SetSelectedValue(strataDD, displayStrata)
   end
@@ -2505,34 +2498,6 @@ function DT:_WireProgressMatEvents(drawer, controls)
         info.func = function() _choose(opt.value) end
         UIDropDownMenu_AddButton(info, level)
       end
-    end)
-  end
-  
-  -- ===== Fade Checkbox =====
-  if controls.fade and controls.fade._checkbox then
-    controls.fade._checkbox:SetScript("OnClick", function(self)
-      if _IsGuarded() then return end
-      local id = _GetNodeId()
-      if not id then return end
-      local PS = Gate:Get('PropertyService')
-      if PS and PS.Set then
-        PS:Set(id, 'fade', self:GetChecked() and true or false)
-      end
-      if UI and UI.RefreshRight then UI:RefreshRight() end
-    end)
-  end
-  
-  -- ===== Mirror Checkbox =====
-  if controls.mirror and controls.mirror._checkbox then
-    controls.mirror._checkbox:SetScript("OnClick", function(self)
-      if _IsGuarded() then return end
-      local id = _GetNodeId()
-      if not id then return end
-      local PS = Gate:Get('PropertyService')
-      if PS and PS.Set then
-        PS:Set(id, 'mirror', self:GetChecked() and true or false)
-      end
-      if UI and UI.RefreshRight then UI:RefreshRight() end
     end)
   end
   

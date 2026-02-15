@@ -14,19 +14,36 @@ local function Print(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|cff66ccff" .. name .. "|r: " .. tostring(msg))
 end
 
--- Slash command (per Profile):
--- DEV   : /bres
--- THEME : /brt
--- FULL  : /bre
--- <slash>           -> toggle UI
--- <slash> center    -> align selected/current to screen center
--- <slash> first     -> align selected to current (first)
+-- Slash command:
+-- Always: /bre
+-- /bre               -> toggle UI
+-- /bre center        -> align selected/current to screen center
+-- /bre first         -> align selected to current (first)
 local function RegisterSlashCommands()
-  local slash = (Profile and Profile.GetSlashCommand and Profile:GetSlashCommand()) or "/bres"
+  local slash = (Profile and Profile.GetSlashCommand and Profile:GetSlashCommand()) or "/bre"
   SLASH_BRECMD1 = slash
   SlashCmdList["BRECMD"] = function(msg)
   local raw = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
   local lower = raw:lower()
+
+  -- lang override: /bre lang [auto|zhCN|enUS]
+  if lower == "lang" or lower:match("^lang%s") then
+    local a = raw:match("^%S+%s+(%S+)$")
+    local cur = (Bre.GetLangOverride and Bre.GetLangOverride()) or "auto"
+    if not a or a == "" then
+      Print("lang = " .. tostring(cur) .. " (use: " .. slash .. " lang auto|zhCN|enUS)")
+      return
+    end
+    local v = a
+    if v == "AUTO" or v == "Auto" or v == "auto" then v = "auto" end
+    if v == "zhcn" then v = "zhCN" end
+    if v == "enus" then v = "enUS" end
+    if Bre.SetLangOverride then Bre.SetLangOverride(v) end
+    local now = (Bre.GetLangOverride and Bre.GetLangOverride()) or "auto"
+    Print("lang set = " .. tostring(now) .. ". /reload")
+    return
+  end
+
   if lower == "verify" then
     if Bre.Verify and Bre.Verify.RunIsolation then
       Bre.Verify:RunIsolation()
@@ -137,6 +154,7 @@ f:SetScript("OnEvent", function(_, _, name)
   if name ~= addonName then return end
   BreSaved = BreSaved or {}
   BreSaved.modules = BreSaved.modules or {}
+  BreSaved.langOverride = BreSaved.langOverride or "auto"
   if Bre.Linker and Bre.Linker.Bootstrap then
     pcall(function() Bre.Linker:Bootstrap() end)
   end
@@ -150,7 +168,7 @@ f:SetScript("OnEvent", function(_, _, name)
   end
 
   if Profile and Profile.AllowSlashCommands and Profile:AllowSlashCommands() then
-    local s = (Profile and Profile.GetSlashCommand and Profile:GetSlashCommand()) or "/bres"
+    local s = (Profile and Profile.GetSlashCommand and Profile:GetSlashCommand()) or "/bre"
     Print("loaded. Type " .. s)
   else
     Print("loaded.")

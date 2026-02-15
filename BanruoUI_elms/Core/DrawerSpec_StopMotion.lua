@@ -45,7 +45,7 @@ Bre.DrawerSpec_StopMotion = {
     -- Playback params (shell)
     { type = "label",   text = "ELEM_STOPMOTION_PLAY", x = 18, y = -260},
 
-    { type = "label",      text = "ELEM_STOPMOTION_FPS",     x = 118,  y = -286 },
+    { type = "label",      text = "ELEM_STOPMOTION_FPS",     x = 160,  y = -286 },
     { type = "numericbox", id   = "fps",                      x = 198, y = -282 },
 
     { type = "label",    text = "ELEM_STOPMOTION_MODE",  x = 20,  y = -324 },

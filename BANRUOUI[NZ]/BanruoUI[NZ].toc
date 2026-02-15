@@ -2,11 +2,11 @@
 ## Title: BanruoUI_theme_ 内置主题包
 ## Notes: BANRUOUI[NZ]
 ## Author: BanruoUI
-## Version: 2.0.9
+## Version: v2.0.14
 ## RequiredDeps: BanruoUI
 
 
-Data_BrE.lua
+Data_Bre.lua
+Data_Bre_en.lua
 Data_ElvUI.lua
 ThemePack.lua
-

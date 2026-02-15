@@ -12,7 +12,7 @@ Bre.DrawerSpec_ProgressMat = {
   -- Step9: All y coordinates adjusted upward by 14px
   -- Step10.1: Redesigned layout - 2 rows x 3 columns
   specificContent = {
-    -- Row : 前景材质/背景材质
+    
     
     
     
@@ -77,32 +77,24 @@ Bre.DrawerSpec_ProgressMat = {
     
     
     
-    -- Row：褪色/前景颜色/前景
-    {
-      type = "checkbox",
-      id = "fade",
-      text = "ELEM_MAT_FADE",
-      x = 18,
-      y = -128,
-    },
-    
+    -- Row：前景颜色/前景材质
     {
       type = "label",
       text = "PROG_MAT_FG_COLOR",
-      x = 85,
+      x = 17,
       y = -134,
     },
     
     {
       type = "color_button",
       id = "fgColor",
-      x = 141,
+      x = 73,
       y = -134,
     },
      {
       type = "label",
       text = "PROG_MAT_FG",
-      x = 195,
+      x = 180,
       y = -134,
     },
     {
@@ -113,32 +105,24 @@ Bre.DrawerSpec_ProgressMat = {
       width = 130,
     },
     
-    -- Row：镜像/背景颜色/背景
-    {
-      type = "checkbox",
-      id = "mirror",
-      text = "ELEM_MAT_MIRROR",
-      x = 18,
-      y = -165,
-    },
-    
+    -- Row：背景颜色/背景材质
     {
       type = "label",
       text = "PROG_MAT_BG_COLOR",
-      x = 85,
+      x = 17,
       y = -172,
     },
     
     {
       type = "color_button",
       id = "bgColor",
-      x = 141,
+      x = 73,
       y = -172,
     },
      {
       type = "label",
       text = "PROG_MAT_BG",
-      x = 195,
+      x = 180,
       y = -172,
     },
     {

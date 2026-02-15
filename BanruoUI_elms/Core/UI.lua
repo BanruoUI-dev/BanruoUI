@@ -185,11 +185,11 @@ local MAIN_H = (Bre.Const and Bre.Const.HEIGHT) or 560
 local LEFT_W = 360
 local TOP_H  = 26
 
--- Square fixed layout (SizeMode DEFAULT): 560x560 with strict 2 columns (Tree 320 + Right 240).
+-- Square fixed layout (SizeMode DEFAULT): 560x560 with strict 2 columns (Tree 310 + Right 250).
 local SQUARE_W = 560  -- content width
 local SQUARE_H = 560  -- content height
-local TREE_W_FIXED = 320
-local RIGHT_W_FIXED = 240
+local TREE_W_FIXED = 310
+local RIGHT_W_FIXED = 250
 
 -- BanruoUI DialogBox insets (used to grow outer frame so border wraps content)
 local DIALOG_INSET_L = 11
@@ -253,7 +253,7 @@ function UI:ApplyLayoutPreset(preset)
     body:SetPoint("TOPLEFT", DIALOG_INSET_L, -34 - TOP_H - 6 - DIALOG_INSET_T)
     body:SetPoint("BOTTOMRIGHT", -DIALOG_INSET_R, DIALOG_INSET_B)
 
-    -- Strict 2 columns: Tree 320 + Right 240, no gap
+    -- Strict 2 columns: Tree 310 + Right 250, no gap
     left:ClearAllPoints()
     left:SetPoint("TOPLEFT", inner, "TOPLEFT", 0, 0)
     left:SetPoint("BOTTOMLEFT", inner, "BOTTOMLEFT", 0, 0)
@@ -819,8 +819,8 @@ end
     Element = makeTabBtn(rightTabs, L("TAB_ELEMENT")),
     Conditions = makeTabBtn(rightTabs, L("TAB_CONDITIONS")),
     Actions = makeTabBtn(rightTabs, L("TAB_ACTIONS")),
-    LoadIO = makeTabBtn(rightTabs, L("TAB_LOADIO")),
-    CustomFn = makeTabBtn(rightTabs, L("TAB_CUSTOMFN")),
+    LoadIO = makeTabBtn(rightTabs, L("TAB_LOAD")),
+    CustomFn = makeTabBtn(rightTabs, L("TAB_CUSTOM")),
   }
 
   right._tabBtns.Group:SetPoint("LEFT", 0, 0)
@@ -5227,17 +5227,10 @@ end
         local COL2_X = 85
         local COL3_X = LBL_RX-13
 
-        -- Row 1: Fade | FG Color | Shape
-        local fadeLbl = _MakeLabel(_T("PROG_MAT_FADE", "褪色"), 0, 0)
-        fadeLbl:ClearAllPoints()
-        fadeLbl:SetPoint("LEFT", pmContent, "TOPLEFT", COL1_X, LINE1_Y)
-        local cbFade = CreateFrame("CheckButton", nil, pmContent, "UICheckButtonTemplate")
-        cbFade:ClearAllPoints()
-        cbFade:SetPoint("LEFT", fadeLbl, "RIGHT", 1, 0)
-
+        -- Row 1: FG Color | Shape
         local fgColorLbl = _MakeLabel(_T("PROG_MAT_FG_COLOR", "前景颜色"), 0, 0)
         fgColorLbl:ClearAllPoints()
-        fgColorLbl:SetPoint("LEFT", pmContent, "TOPLEFT", (COL2_X + 5), LINE1_Y)
+        fgColorLbl:SetPoint("LEFT", pmContent, "TOPLEFT", COL1_X, LINE1_Y)
         local fgSwatch = CreateFrame("Button", nil, pmContent, "BackdropTemplate")
         fgSwatch:SetSize(34, 22)
         fgSwatch:ClearAllPoints()
@@ -5253,17 +5246,10 @@ end
         shapeDD:SetPoint("LEFT", shapeLbl, "RIGHT", -15, -2)
         UIDropDownMenu_SetWidth(shapeDD, 80)
 
-        -- Row 2: Mirror | BG Color | Direction
-        local mirrorLbl = _MakeLabel(_T("PROG_MAT_MIRROR", "镜像"), 0, 0)
-        mirrorLbl:ClearAllPoints()
-        mirrorLbl:SetPoint("LEFT", pmContent, "TOPLEFT", COL1_X, LINE2_Y)
-        local cbMirror = CreateFrame("CheckButton", nil, pmContent, "UICheckButtonTemplate")
-        cbMirror:ClearAllPoints()
-        cbMirror:SetPoint("LEFT", mirrorLbl, "RIGHT", 1, 0)
-
+        -- Row 2: BG Color | Direction
         local bgColorLbl = _MakeLabel(_T("PROG_MAT_BG_COLOR", "背景颜色"), 0, 0)
         bgColorLbl:ClearAllPoints()
-        bgColorLbl:SetPoint("LEFT", pmContent, "TOPLEFT", (COL2_X + 5), LINE2_Y)
+        bgColorLbl:SetPoint("LEFT", pmContent, "TOPLEFT", COL1_X, LINE2_Y)
         local bgSwatch = CreateFrame("Button", nil, pmContent, "BackdropTemplate")
         bgSwatch:SetSize(34, 22)
         bgSwatch:ClearAllPoints()
@@ -5285,8 +5271,6 @@ end
         pmContent:SetHeight(h + extra)
 
         -- Keep references (UI-only)
-        drawer._pmFade = cbFade
-        drawer._pmMirror = cbMirror
         drawer._pmFgSwatch = fgSwatch
         drawer._pmBgSwatch = bgSwatch
         drawer._pmShapeDD = shapeDD

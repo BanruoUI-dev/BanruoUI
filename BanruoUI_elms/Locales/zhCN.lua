@@ -114,10 +114,13 @@ NEW_BTN_PET = "3D小宠物",
   TAB_ELEMENT = "元素",
   TAB_CONDITIONS = "输入条件",
   TAB_ACTIONS = "输出动作",
-  TAB_LOADIO = "载入载出",
-  TAB_CUSTOMFN = "自定义函数",
+  TAB_LOAD = "载入载出",
+  TAB_CUSTOM = "自定义函数",
   TAB_BLANK = "空白",
   TAB_PROP_POS = "属性/位置",
+
+  -- Conditions drawer
+  COND_PLACEHOLDER = "（占位：后续接入条件组/条件条目与编辑控件）",
 
  THEME_MINIMAL_TITLE = "微调",
  THEME_MINIMAL_SECTION_SIZE = "属性",

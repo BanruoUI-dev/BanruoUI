@@ -57,7 +57,8 @@ local function CreateElvuiStringPage(parent)
 
   local edit = CreateFrame("EditBox", nil, scroll)
   edit:SetMultiLine(true)
-  edit:SetFont("Fonts\ARKai_T.ttf", 13, "")
+  edit:SetFontObject(ChatFontNormal)
+  edit:SetTextColor(1, 1, 1, 1)
   edit:SetAutoFocus(false)
   edit:EnableMouse(true)
   edit:SetScript("OnEscapePressed", function() edit:ClearFocus() end)
@@ -69,9 +70,10 @@ local function CreateElvuiStringPage(parent)
 
   -- 根据 ScrollFrame 宽度自适应 EditBox 宽度
   scroll:SetScript("OnSizeChanged", function()
-    local w = scroll:GetWidth() or 560
-    edit:SetWidth(math.max(200, w - 20))
-  end)
+  local w = scroll:GetWidth() or 560
+  edit:SetWidth(math.max(200, w - 20))
+  edit:SetHeight(2000)  -- 新增这行
+end)
 
   local function UpdateSourceButtons()
     -- Selected source button: visually "pressed" by disabling it.

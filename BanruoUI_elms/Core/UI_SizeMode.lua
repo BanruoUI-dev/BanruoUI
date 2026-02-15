@@ -45,7 +45,7 @@ function UI:SetSizeMode(mode)
     pcall(function()
       local treeW = self.treeFrame and (self.treeFrame:GetWidth() or 200) or 200
       local rightW = math.max(200, w - treeW - 20)
-      if mode == "COMPACT" then rightW = 240 end
+      if mode == "COMPACT" then rightW = 250 end
       local topH = (self.topBar and self.topBar:GetHeight()) or 40
       local rightH = math.max(200, h - topH - 20)
       self.rightPane:SetSize(rightW, rightH)

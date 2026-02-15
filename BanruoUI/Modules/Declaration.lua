@@ -66,9 +66,14 @@ local function CreatePage(parent)
     return eb
   end
 
-  page._ebGitHub  = AddLinkRow('DECLARATION_GITHUB', URL_GITHUB)
   page._ebBili    = AddLinkRow('DECLARATION_BILIBILI', URL_BILIBILI)
-  page._ebYouTube = AddLinkRow('DECLARATION_YOUTUBE', URL_YOUTUBE)
+  
+  -- 仅非中文客户端显示 Youtube 和 Github
+  local locale = GetLocale()
+  if locale ~= "zhCN" then
+    page._ebGitHub  = AddLinkRow('DECLARATION_GITHUB', URL_GITHUB)
+    page._ebYouTube = AddLinkRow('DECLARATION_YOUTUBE', URL_YOUTUBE)
+  end
 
   function page:RefreshTexts()
     title:SetText(B:Loc('MODULE_DECLARATION'))

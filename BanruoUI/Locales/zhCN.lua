@@ -35,7 +35,7 @@ L["PREVIEW_NO_THEME_PACK"] = "未检测到主题包。\n\n请安装主题包插�
 L["PREVIEW_AUTHOR_LINE"] = "作者：%s"
 L["PREVIEW_VERSION_LINE"] = "版本：%s"
 L["PREVIEW_INCLUDES_LINE"] = "包含：%s"
-L["PREVIEW_INCLUDES_BRE"] = "包含：BrE 主题数据"
+L["PREVIEW_INCLUDES_BRE"] = "BrE 主题数据"
 L["PREVIEW_INCLUDES_NONE"] = "无（该主题只用于展示/扩展字段）"
 L["PREVIEW_TIP_APPLY_REQUIRED"] = "点击上方【切换主题】才会真正生效。"
 L["PREVIEW_TIP_SWITCH_NO_OVERRIDE"] = "普通切换不覆盖 BrE 微调；回作者默认用【强制还原默认】。"
@@ -61,7 +61,7 @@ L['MODULE_THEME_PREVIEW'] = '主题预览'
 
 -- Step4: module titles + ElementSwitch UI bits
 L['MODULE_ELEMENT_SWITCH']   = '元素切换'
-L['MODULE_STORY_COLLECTION'] = '卡罗牌'
+L['MODULE_STORY_COLLECTION'] = '塔罗牌'
 L['MODULE_JUKEBOX']          = '点歌机'
 L['MODULE_ELVUI_STRING']     = 'ElvUI 字符串'
 

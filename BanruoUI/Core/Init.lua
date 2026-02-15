@@ -18,7 +18,35 @@ B.state.activeModuleId = B.state.activeModuleId or "theme_preview"
 SLASH_BANRUOUIOPEN1 = "/banruo"
 SLASH_BANRUOUIOPEN2 = "/banruoui"
 SLASH_BANRUOUIOPEN3 = "/br"
-SlashCmdList["BANRUOUIOPEN"] = function()
+SlashCmdList["BANRUOUIOPEN"] = function(msg)
+  local raw = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  local lower = raw:lower()
+
+  -- lang override: /br lang [auto|zhCN|enUS]
+  if lower == "lang" or lower:match("^lang%s") then
+    _G.BanruoUIDB = _G.BanruoUIDB or {}
+    local a = raw:match("^%S+%s+(%S+)$")
+    local cur = _G.BanruoUIDB.langOverride or "auto"
+    if not a or a == "" then
+      B:Print("lang = " .. tostring(cur) .. " (use: /br lang auto|zhCN|enUS)")
+      return
+    end
+    local v = a
+    if v == "AUTO" or v == "Auto" or v == "auto" then
+      _G.BanruoUIDB.langOverride = nil
+    else
+      if v == "zhcn" then v = "zhCN" end
+      if v == "enus" then v = "enUS" end
+      if v == "zhCN" or v == "enUS" then
+        _G.BanruoUIDB.langOverride = v
+      end
+    end
+    if B and B.ApplyLocale then B:ApplyLocale() end
+    local now = _G.BanruoUIDB.langOverride or "auto"
+    B:Print("lang set = " .. tostring(now) .. ". /reload")
+    return
+  end
+
   if not B.frame then
     B:Print("UI 尚未初始化，请 /reload 后重试。")
     return

@@ -11,8 +11,8 @@ Bre.DrawerSpec_Conditions = {
   title = "TAB_CONDITIONS", -- "输入条件"
 
   specificContent = {
-    { type = "label", text = "输入条件", x = 22, y = -8 },
-    { type = "label", text = "（占位：后续接入条件组/条件条目与编辑控件）", x = 22, y = -36 },
+    { type = "label", text = "TAB_CONDITIONS", x = 22, y = -8 },
+    { type = "label", text = "COND_PLACEHOLDER", x = 22, y = -36 },
   },
 }
 
