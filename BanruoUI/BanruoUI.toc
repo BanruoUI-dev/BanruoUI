@@ -1,8 +1,9 @@
 ## Interface: 120000,120001
 ## Title: BanruoUI
+## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Notes: 主题管理器（主题包=独立插件）
 ## Author: BANRUO
-## Version: v2.0.13
+## Version: v2.0.14
 ## SavedVariables: BanruoUIDB
 
 

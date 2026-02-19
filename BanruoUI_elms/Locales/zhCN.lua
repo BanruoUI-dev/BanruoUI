@@ -307,3 +307,7 @@ Bre.Locales.zhCN["MENU_LOAD"] = "载入"
 Bre.Locales.zhCN["MENU_DELETE"] = "删除"
 
 Bre.Locales.zhCN["MENU_EXPORT"] = "导出"
+
+-- BanruoUI_options panel
+Bre.Locales.zhCN["OPTIONS_PANEL_SUB"]  = "BreOptions v2.0.14  |  输入 /brs 打开编辑器"
+Bre.Locales.zhCN["OPTIONS_BTN_OPEN"]   = "打开 /brs"

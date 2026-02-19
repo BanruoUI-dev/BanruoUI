@@ -1,10 +1,12 @@
 ## Interface: 120000,120001
-## Title: BanruoUI_options
+## Title: BanruoUI_Options
 ## Notes: Options panel for BanruoUI_elms (BanruoUI)
 ## Author: BanruoUI
-## Version: v2.0.13
+## Version: v2.0.14
 ## RequiredDeps: BanruoUI_elms
 ## LoadOnDemand: 1
+## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
+## X-Part-Of: BanruoUI
 
 Core/Options.lua
 Dev/FixtureTree.lua

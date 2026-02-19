@@ -2,8 +2,10 @@
 ## Title: BanruoUI_elms
 ## Notes: BanruoUI child plugin (Elms) - engine rebuild skeleton (12.0+)
 ## Author: BanruoUI / BrA rebuild
-## Version: v2.0.13
+## Version: v2.0.14
 ## SavedVariables: BreSaved
+## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
+## X-Part-Of: BanruoUI
 
 Libs/LibStub/LibStub.lua
 Libs/LibSerialize/LibSerialize.lua

@@ -550,14 +550,25 @@ function API:Open()
   local UI = _UI()
   if UI and UI.Show then
     pcall(function() UI:Show() end)
-    return true
-  end
-  if UI and UI.Toggle then
+  elseif UI and UI.Toggle then
     pcall(function() UI:Toggle() end)
-    return true
+  else
+    return false
   end
-  return false
+
+  -- 吸附到 BanruoUI 主面板右侧，顶边对齐
+  pcall(function()
+    local breFrame = UI and UI.frame
+    local hostFrame = _G.BanruoUI and _G.BanruoUI.frame
+    if breFrame and hostFrame and hostFrame:IsShown() then
+      breFrame:ClearAllPoints()
+      breFrame:SetPoint("TOPLEFT", hostFrame, "TOPRIGHT", -6, 0)
+    end
+  end)
+
+  return true
 end
+
 
 -- Expose stable host-facing API (BanruoUI adapter)
 Bre.HostAPI = API

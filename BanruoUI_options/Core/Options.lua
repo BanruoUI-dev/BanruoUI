@@ -9,6 +9,16 @@ if type(Bre) ~= "table" then
   return
 end
 
+-- Locale helper: use Bre.L if available, otherwise fallback to enUS
+local function L(key)
+  if Bre.L then return Bre.L(key) end
+  local fallback = {
+    OPTIONS_PANEL_SUB  = "BreOptions v2.0.14  |  Type /brs to open the editor",
+    OPTIONS_BTN_OPEN   = "Open /brs",
+  }
+  return fallback[key] or key
+end
+
 local Registry = Bre.Registry
 local Gate = Bre.Gate
 
@@ -44,12 +54,12 @@ local function CreatePanel()
 
   local sub = panel:CreateFontString(nil, "ARTWORK", (Bre.Font and Bre.Font:HighlightSmall() or "GameFontHighlightSmall"))
   sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  sub:SetText("BreOptions v2.9.4  |  Type /brs to open the editor")
+  sub:SetText(L("OPTIONS_PANEL_SUB"))
 
   local btn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
   btn:SetSize(180, 22)
   btn:SetPoint("TOPLEFT", sub, "BOTTOMLEFT", 0, -12)
-  btn:SetText("Open /brs")
+  btn:SetText(L("OPTIONS_BTN_OPEN"))
   btn:SetScript("OnClick", function()
     if Bre and Bre.UI and Bre.UI.Toggle then
       Bre.UI:Toggle()
