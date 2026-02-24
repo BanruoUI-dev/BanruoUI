@@ -31,6 +31,7 @@ Bre.Locales.enUS = {
 
   BTN_NEW = "New",
   BTN_IMPORT = "Import",
+  BTN_MODE_SWITCH = "Mode",
   BTN_LOCKPOS = "Lock Position",
   BTN_MAGNET = "Magnet Align",
   BTN_CREATE = "Create",

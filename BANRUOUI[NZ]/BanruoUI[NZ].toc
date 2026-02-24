@@ -3,7 +3,7 @@
 ## Title-zhCN: BanruoUI [内置主题包]
 ## Notes: BANRUOUI[NZ]
 ## Author: BanruoUI
-## Version: v2.0.14
+## Version: v2.0.16
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 

@@ -27,6 +27,7 @@ Bre.Locales.zhCN = {
 
   BTN_NEW = "新建",
   BTN_IMPORT = "导入",
+  BTN_MODE_SWITCH = "模式切换",
   BTN_LOCKPOS = "锁定位置",
   BTN_MAGNET = "磁力对齐",
   BTN_CREATE = "创建",

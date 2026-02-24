@@ -38,7 +38,7 @@ function UI:ApplyTopButtonsWhitelist(cfg)
   end
 
   -- Policy (B): Import <-> New are bound (always same shown state).
-  -- Close remains independent.
+  -- Close remains independent. ModeSwitch always shown (all modes).
   local importOn = (allow.Import == true)
   local newOn = importOn
 
@@ -48,6 +48,8 @@ function UI:ApplyTopButtonsWhitelist(cfg)
         b:SetShown(importOn)
       elseif k == "New" then
         b:SetShown(newOn)
+      elseif k == "ModeSwitch" then
+        b:SetShown(true)  -- always visible in THEME/FULL/DEV
       else
         b:SetShown(allow[k] == true)
       end
@@ -62,6 +64,7 @@ function UI:UpdateHeaderHitInsets()
   local hit = f._headerHit
   local btnNew = f._headerHitBtnNew
   local btnImport = f._headerHitBtnImport
+  local btnModeSwitch = f._headerHitBtnModeSwitch
   local btnClose = f._headerHitBtnClose
   if not (hit.GetLeft and hit.GetRight) then return end
   local l = hit:GetLeft()
@@ -78,6 +81,12 @@ function UI:UpdateHeaderHitInsets()
     local nr = btnNew:GetRight()
     if nr and (not leftBlockRight or nr > leftBlockRight) then
       leftBlockRight = nr
+    end
+  end
+  if btnModeSwitch and btnModeSwitch.IsShown and btnModeSwitch:IsShown() and btnModeSwitch.GetRight then
+    local mr = btnModeSwitch:GetRight()
+    if mr and (not leftBlockRight or mr > leftBlockRight) then
+      leftBlockRight = mr
     end
   end
   local closeLeft
@@ -538,6 +547,16 @@ function UI:EnsureFrame()
   btnNew:SetScript("OnClick", function() UI:OpenNewOverlay() end)
   top._btnNew = btnNew
 
+  local btnModeSwitch = makeTopBtn(top, L("BTN_MODE_SWITCH"), 56)
+  btnModeSwitch:SetPoint("LEFT", btnNew, "RIGHT", 6, 0)
+  btnModeSwitch:SetScript("OnClick", function()
+    local cur = Bre.Profile and Bre.Profile:GetMode() or "FULL"
+    local next = (cur == "THEME") and "FULL" or "THEME"
+    if Bre.Profile and Bre.Profile.SetMode then
+      Bre.Profile:SetMode(next)
+    end
+  end)
+  top._btnModeSwitch = btnModeSwitch
 
   -- whitelist refs (top bar)
   f._topBar = top
@@ -546,6 +565,7 @@ function UI:EnsureFrame()
   top._btns = {
     New = btnNew,
     Import = btnImport,
+    ModeSwitch = btnModeSwitch,
     Close = close,
   }
 
@@ -606,6 +626,7 @@ function UI:EnsureFrame()
   f._headerHit = headerHit
   f._headerHitBtnNew = btnNew
   f._headerHitBtnImport = btnImport
+  f._headerHitBtnModeSwitch = btnModeSwitch
   f._headerHitBtnClose = close
   headerHit:SetScript("OnShow", function()
     if UI and UI.UpdateHeaderHitInsets then
@@ -4241,8 +4262,25 @@ function UI:OpenImportWindow()
   local edit = CreateFrame("EditBox", nil, scroll)
   edit:SetMultiLine(true)
   edit:SetAutoFocus(false)
-  edit:SetFont("Fonts\ARKai_T.ttf", 13, "")
-  edit:SetWidth(460)
+	  edit:SetFont("Fonts\\ARKai_T.ttf", 13, "")
+	  edit:SetWidth(460)
+	  -- IMPORTANT: make the editbox clickable/focusable and give it a real layout.
+	  -- Without points/height, the editbox can end up with 0 height (can't receive focus / can't type).
+	  edit:EnableMouse(true)
+	  edit:SetPoint("TOPLEFT")
+	  edit:SetPoint("TOPRIGHT")
+	  edit:SetHeight(1)
+	  edit:SetTextInsets(4, 4, 4, 4)
+	  edit:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+	  edit:SetScript("OnTextChanged", function(self)
+	    if ScrollingEdit_OnTextChanged then ScrollingEdit_OnTextChanged(self, scroll) end
+	  end)
+	  edit:SetScript("OnCursorChanged", function(self, x, y, w, h)
+	    if ScrollingEdit_OnCursorChanged then ScrollingEdit_OnCursorChanged(self, x, y, w, h) end
+	  end)
+	  edit:SetScript("OnUpdate", function(self, elapsed)
+	    if ScrollingEdit_OnUpdate then ScrollingEdit_OnUpdate(self, elapsed, scroll) end
+	  end)
   edit:SetText("")
   edit:SetScript("OnEscapePressed", function() edit:ClearFocus() end)
   scroll:SetScrollChild(edit)

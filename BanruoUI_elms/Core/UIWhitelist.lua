@@ -21,7 +21,7 @@ local W = Bre.UIWhitelist
 W.config = W.config or {
   top_buttons = {
     -- keys must match UI's internal mapping (e.g. "Import", "Close", "New")
-    allow = { Import = true, New = true, Close = true },
+    allow = { Import = true, New = true, Close = true, ModeSwitch = true },
   },
   drawers = {
     -- keys must match right tab keys (e.g. "Element", "LoadIO")
