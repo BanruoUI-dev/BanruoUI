@@ -6,8 +6,11 @@ rem ===== Source and Destination =====
 set "SRC=I:\Coding\BanruoUI-dev_github_clone"
 set "DST=F:\WOW_project\WOW_addon\BanruoUI_Bre\BanruoUI_Bre_archive"
 
-rem ===== Version file (saved beside this script) =====
-set "VERFILE=%~dp0last_version.txt"
+rem ===== TOC files =====
+set "TOC_MAIN=%SRC%\BanruoUI\BanruoUI.toc"
+set "TOC_ELMS=%SRC%\BanruoUI_elms\BanruoUI_elms.toc"
+set "TOC_OPTIONS=%SRC%\BanruoUI_options\BanruoUI_options.toc"
+set "TOC_NZ=%SRC%\BANRUOUI[NZ]\BanruoUI[NZ].toc"
 
 rem ===== Check destination exists =====
 if not exist "%DST%" (
@@ -17,50 +20,7 @@ if not exist "%DST%" (
     exit /b 1
 )
 
-rem ===== Init version file if missing =====
-if not exist "%VERFILE%" (
-    echo v1.0.0>"%VERFILE%"
-)
-
-set "LASTVER="
-set /p LASTVER=<"%VERFILE%"
-
-if "%LASTVER%"=="" (
-    set "LASTVER=v1.0.0"
-)
-
-rem ===== Parse version and auto increment patch =====
-set "RAW=%LASTVER%"
-set "RAW=%RAW:v=%"
-
-for /f "tokens=1,2,3 delims=." %%a in ("%RAW%") do (
-    set /a MAJOR=%%a
-    set /a MINOR=%%b
-    set /a PATCH=%%c
-)
-
-set /a PATCH=PATCH+1
-set "NEXTVER=v!MAJOR!.!MINOR!.!PATCH!"
-
-echo.
-echo =========================================
-echo  BanruoUI Release + Version Update
-echo =========================================
-echo.
-echo Last version      : %LASTVER%
-echo Suggested version : %NEXTVER%
-echo.
-
-set /p VER=Enter version (press Enter to use suggested): 
-if "%VER%"=="" (
-    set "VER=%NEXTVER%"
-)
-
-echo.
-echo Final version: %VER%
-echo.
-
-rem ===== Check source folders =====
+rem ===== Check source folders / toc files =====
 if not exist "%SRC%\BanruoUI" (
     echo ERROR: Missing folder %SRC%\BanruoUI
     pause
@@ -82,14 +42,88 @@ if not exist "%SRC%\BanruoUI_options" (
     exit /b 1
 )
 
-echo [1/6] Update TOC versions...
+if not exist "%TOC_MAIN%" (
+    echo ERROR: Missing TOC %TOC_MAIN%
+    pause
+    exit /b 1
+)
+if not exist "%TOC_ELMS%" (
+    echo ERROR: Missing TOC %TOC_ELMS%
+    pause
+    exit /b 1
+)
+if not exist "%TOC_OPTIONS%" (
+    echo ERROR: Missing TOC %TOC_OPTIONS%
+    pause
+    exit /b 1
+)
+if not exist "%TOC_NZ%" (
+    echo ERROR: Missing TOC %TOC_NZ%
+    pause
+    exit /b 1
+)
+
+rem ===== Read current version from main TOC =====
+for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command ^
+  "$m = Select-String -LiteralPath '%TOC_MAIN%' -Pattern '^## Version:\s*(.+)$'; if($m){$m.Matches[0].Groups[1].Value.Trim()}"`) do (
+    set "LASTVER=%%i"
+)
+
+if "%LASTVER%"=="" (
+    echo ERROR: Failed to read version from:
+    echo %TOC_MAIN%
+    pause
+    exit /b 1
+)
+
+rem ===== Parse version and auto increment patch =====
+set "RAW=%LASTVER%"
+set "RAW=%RAW:v=%"
+
+for /f "tokens=1,2,3 delims=." %%a in ("%RAW%") do (
+    set /a MAJOR=%%a
+    set /a MINOR=%%b
+    set /a PATCH=%%c
+)
+
+set /a PATCH=PATCH+1
+set "NEXTVER=v!MAJOR!.!MINOR!.!PATCH!"
+
+echo.
+echo =========================================
+echo  BanruoUI Release + Version Update
+echo =========================================
+echo.
+echo Current version   : %LASTVER%
+echo Suggested version : %NEXTVER%
+echo.
+
+set /p VER=Enter version (press Enter to use suggested): 
+if "%VER%"=="" (
+    set "VER=%NEXTVER%"
+)
+
+echo.
+echo Final version: %VER%
+echo.
+
+set /p NOTE=Enter changelog note: 
+if "%NOTE%"=="" (
+    set "NOTE=No note"
+)
+
+echo.
+echo Changelog note: %NOTE%
+echo.
+
+echo [1/7] Update TOC versions...
 set SUCCESS=0
 set FAIL=0
 
-call :update_toc "%SRC%\BanruoUI\BanruoUI.toc"
-call :update_toc "%SRC%\BanruoUI_elms\BanruoUI_elms.toc"
-call :update_toc "%SRC%\BanruoUI_options\BanruoUI_options.toc"
-call :update_toc "%SRC%\BANRUOUI[NZ]\BanruoUI[NZ].toc"
+call :update_toc "%TOC_MAIN%"
+call :update_toc "%TOC_ELMS%"
+call :update_toc "%TOC_OPTIONS%"
+call :update_toc "%TOC_NZ%"
 
 echo.
 echo TOC update result: !SUCCESS! OK / !FAIL! failed
@@ -106,11 +140,11 @@ set "STAGE=%WORK%\BanruoUI_release"
 if exist "%WORK%" rmdir /S /Q "%WORK%"
 
 echo.
-echo [2/6] Create temp folder...
+echo [2/7] Create temp folder...
 mkdir "%STAGE%"
 
 echo.
-echo [3/6] Copy selected folders...
+echo [3/7] Copy selected folders...
 robocopy "%SRC%\BanruoUI" "%STAGE%\BanruoUI" /E /R:1 /W:1 >nul
 if errorlevel 8 goto :error
 
@@ -124,12 +158,19 @@ robocopy "%SRC%\BanruoUI_options" "%STAGE%\BanruoUI_options" /E /R:1 /W:1 >nul
 if errorlevel 8 goto :error
 
 echo.
-echo [4/6] Create zip...
+echo [4/7] Create zip...
 set "ZIP=%DST%\BanruoUI_%VER%.zip"
+set "CHANGELOG=%DST%\BanruoUI_%VER%_changelog.txt"
 
 if exist "%ZIP%" (
     echo ERROR: File already exists:
     echo %ZIP%
+    goto :error
+)
+
+if exist "%CHANGELOG%" (
+    echo ERROR: Changelog file already exists:
+    echo %CHANGELOG%
     goto :error
 )
 
@@ -140,18 +181,35 @@ if errorlevel 1 (
 )
 
 echo.
-echo [5/6] Save current version...
-echo %VER%>"%VERFILE%"
+echo [5/7] Create changelog...
+(
+echo Version: %VER%
+echo Date: %date% %time%
+echo.
+echo Note:
+echo %NOTE%
+echo.
+echo Packed folders:
+echo - BanruoUI
+echo - BANRUOUI[NZ]
+echo - BanruoUI_elms
+echo - BanruoUI_options
+) > "%CHANGELOG%"
+
+if errorlevel 1 (
+    echo ERROR: Failed to create changelog
+    goto :error
+)
 
 echo.
-echo [6/6] Clean temp folder...
+echo [6/7] Clean temp folder...
 rmdir /S /Q "%WORK%"
 
 echo.
-echo =========================================
-echo DONE
-echo ZIP : %ZIP%
-echo VER : %VER%
+echo [7/7] Done
+echo ZIP       : %ZIP%
+echo CHANGELOG : %CHANGELOG%
+echo VER       : %VER%
 echo =========================================
 echo.
 pause
