@@ -7,16 +7,16 @@ if not B then return end
 
 -- elementId 作为内部绑定键（后续 Adapter 用）；label 走本地化 key
 local ELEMENTS = {
-  { id = "trim_top",    labelKey = "ES_MISC_TRIM_TOP" },
-  { id = "trim_bottom", labelKey = "ES_MISC_TRIM_BOTTOM" },
-  { id = "decor_1",     labelKey = "ES_MISC_DECOR_1" },
-  { id = "decor_2",     labelKey = "ES_MISC_DECOR_2" },
-  { id = "decor_3",     labelKey = "ES_MISC_DECOR_3" },
-  { id = "decor_4",     labelKey = "ES_MISC_DECOR_4" },
-  { id = "decor_5",     labelKey = "ES_MISC_DECOR_5" },
-  { id = "decor_6",     labelKey = "ES_MISC_DECOR_6" },
-  { id = "decor_7",     labelKey = "ES_MISC_DECOR_7" },
-  { id = "decor_8",     labelKey = "ES_MISC_DECOR_8" },
+  { id = "misc_top_strip",    labelKey = "ES_MISC_TRIM_TOP" },
+  { id = "misc_bottom_strip", labelKey = "ES_MISC_TRIM_BOTTOM" },
+  { id = "misc_deco1",        labelKey = "ES_MISC_DECOR_1" },
+  { id = "misc_deco2",        labelKey = "ES_MISC_DECOR_2" },
+  { id = "misc_deco3",        labelKey = "ES_MISC_DECOR_3" },
+  { id = "misc_deco4",        labelKey = "ES_MISC_DECOR_4" },
+  { id = "misc_deco5",        labelKey = "ES_MISC_DECOR_5" },
+  { id = "misc_deco6",        labelKey = "ES_MISC_DECOR_6" },
+  { id = "misc_deco7",        labelKey = "ES_MISC_DECOR_7" },
+  { id = "misc_deco8",        labelKey = "ES_MISC_DECOR_8" },
 }
 
 B:ES_RegisterSubModule("es_misc_decorations", {

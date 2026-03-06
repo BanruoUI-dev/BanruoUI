@@ -5,7 +5,7 @@ local B = BanruoUI
 if not B then return end
 
 local URL_GITHUB  = 'https://github.com/BanruoUI-dev/BanruoUI'
-local URL_BILIBILI = 'https://www.bilibili.com/video/BV1pcc7zzE5L/'
+local URL_BILIBILI = 'https://www.bilibili.com/video/BV18MAkzZEJF/?spm_id_from=333.1387.homepage.video_card.click&vd_source=a1aa1eb46fda2b934c3ca33f5dcf1b2a'
 local URL_YOUTUBE = 'https://www.youtube.com/watch?v=4BI7JlxN_UQ'
 
 local function CreateReadonlyLinkBox(parent, w)

@@ -83,7 +83,8 @@ L['ES_DPF_FRAME'] = 'Frame'
 L['ES_DPF_BG']    = 'Backdrop'
 
 L['ES_MM_TITLE'] = 'Minimap'
-L['ES_MM_FRAME'] = 'Border'
+L['ES_MM_FRAME'] = 'Outer Frame'
+L['ES_MM_OUTER'] = 'Outer Frame'
 L['ES_MM_BG']    = 'BG'
 
 -- Element Switch - Action Bar
@@ -118,6 +119,12 @@ L['ELVUI_STRING_META_NO_ACTIVE'] = 'Active theme: Unknown (apply a theme first i
 L['ELVUI_STRING_BODY_NO_ACTIVE'] = 'Theme not active. Unable to read export strings.'
 L['ELVUI_STRING_META_ACTIVE_FMT'] = 'Active theme: %s'
 L['ELVUI_STRING_META_PROFILE_FMT'] = 'Profile: %s'
+
+-- Minimap icon
+L['MINIMAP_TOOLTIP'] = 'BanruoUI\nLeft-click: Toggle UI\nRight-click: Menu'
+L['MINIMAP_MENU_OPEN'] = 'Open'
+L['MINIMAP_MENU_HIDE'] = 'Hide minimap icon'
+L['MINIMAP_MENU_SHOW'] = 'Show minimap icon'
 L['ELVUI_STRING_BODY_NO_STRING'] = 'This theme pack does not provide an ElvUI export string.\n\nTheme authors may set: theme.elvui.importString'
 L['ELVUI_STRING_NDUI_PLACEHOLDER'] = 'NDui export is not available yet.'
 L['ELVUI_STRING_COPY_NOTICE'] = 'Selected. Press Ctrl+C to copy.'

@@ -39,8 +39,14 @@ local SCHEMA = {
     elements = {
       { key = "misc_top_strip", label = "顶部材质条" },
       { key = "misc_bottom_strip", label = "底部材质条" },
-      { key = "misc_deco1", label = "装饰1" },
-      { key = "misc_deco2", label = "装饰2" },
+      { key = "misc_deco1", label = "装饰 I" },
+      { key = "misc_deco2", label = "装饰 II" },
+      { key = "misc_deco3", label = "装饰 III" },
+      { key = "misc_deco4", label = "装饰 IV" },
+      { key = "misc_deco5", label = "装饰 V" },
+      { key = "misc_deco6", label = "装饰 VI" },
+      { key = "misc_deco7", label = "装饰 VII" },
+      { key = "misc_deco8", label = "装饰 VIII" },
     },
   },
 }

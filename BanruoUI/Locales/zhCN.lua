@@ -75,7 +75,7 @@ L['DECLARATION_DESC'] = [[
 在此对 WA 项目表示感谢与致敬。
 ]]
 L['DECLARATION_GITHUB'] = 'GitHub'
-L['DECLARATION_BILIBILI'] = '更多主题B站'
+L['DECLARATION_BILIBILI'] = '更多主题B站搜 BanruoUI'
 L['DECLARATION_YOUTUBE'] = '更多主题YouTube'
 
 -- 元素切换 - 动态相框
@@ -85,6 +85,7 @@ L['ES_DPF_BG']    = '底纹'
 
 L['ES_MM_TITLE'] = '小地图'
 L['ES_MM_FRAME'] = '外框'
+L['ES_MM_OUTER'] = '外框'
 L['ES_MM_BG']    = '背景'
 
 -- 元素切换 - 动作条
@@ -174,3 +175,9 @@ L['BRMUSIC_GAME_02'] = '暴雪曲目 02'
 L['BRMUSIC_GAME_03'] = '暴雪曲目 03'
 L['BRMUSIC_GAME_04'] = '暴雪曲目 04'
 L['BRMUSIC_GAME_05'] = '暴雪曲目 05'
+
+-- 小地图快捷按钮
+L['MINIMAP_TOOLTIP'] = 'BanruoUI\n左键：打开/关闭面板\n右键：菜单'
+L['MINIMAP_MENU_OPEN'] = '打开'
+L['MINIMAP_MENU_HIDE'] = '隐藏小地图按钮'
+L['MINIMAP_MENU_SHOW'] = '显示小地图按钮'

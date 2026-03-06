@@ -1,9 +1,9 @@
 ## Interface: 120001,120000
 ## Title: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
-## Notes: 主题管理器（主题包=独立插件
+## Notes: =
 ## Author: BANRUO
-## Version: v2.0.16
+## Version: v2.0.21
 ## SavedVariables: BanruoUIDB
 
 
@@ -16,6 +16,7 @@ Core/Registry.lua
 Adapters/Bre.lua
 Modules/Registry.lua
 Modules/LangSwitch.lua
+Modules/MinimapIcon.lua
 Modules/ThemePreview.lua
 Modules/ElementSwitch/Container.lua
 Modules/ElementSwitch/Sub_DynamicPortraitFrame.lua

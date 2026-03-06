@@ -11,6 +11,9 @@ BanruoUIDB.themeInit = BanruoUIDB.themeInit or {}
 -- v2.5 Step0: apply locale after SavedVariables are available
 if B and B.ApplyLocale then B:ApplyLocale() end
 
+-- Minimap shortcut icon (launcher)
+if B and B.InitMinimapIcon then pcall(B.InitMinimapIcon, B) end
+
 B.state = B.state or {}
 B.state.pendingPreviewThemeId = B.state.pendingPreviewThemeId or nil
 B.state.activeModuleId = B.state.activeModuleId or "theme_preview"
@@ -21,6 +24,23 @@ SLASH_BANRUOUIOPEN3 = "/br"
 SlashCmdList["BANRUOUIOPEN"] = function(msg)
   local raw = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
   local lower = raw:lower()
+
+  -- minimap icon toggle: /br minimap [show|hide|toggle]
+  if lower == "minimap" or lower:match("^minimap%s") then
+    _G.BanruoUIDB = _G.BanruoUIDB or {}
+    _G.BanruoUIDB.minimap = _G.BanruoUIDB.minimap or {}
+    local a = raw:match("^%S+%s+(%S+)$")
+    local v = a and a:lower() or "toggle"
+    local mm = _G.BanruoUIDB.minimap
+    if mm.hide == nil then mm.hide = false end
+    if v == "show" then mm.hide = false
+    elseif v == "hide" then mm.hide = true
+    else mm.hide = not mm.hide end
+    if B and B.SetMinimapIconShown then B:SetMinimapIconShown(not mm.hide) end
+    local state = mm.hide and "hide" or "show"
+    if B and B.Print then B:Print("minimap icon: " .. state) end
+    return
+  end
 
   -- lang override: /br lang [auto|zhCN|enUS]
   if lower == "lang" or lower:match("^lang%s") then

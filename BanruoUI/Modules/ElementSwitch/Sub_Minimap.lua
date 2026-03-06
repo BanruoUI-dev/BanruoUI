@@ -6,7 +6,7 @@ if not B then return end
 
 -- elementId 作为内部绑定键（后续 Adapter 用）；显示文本走 Locale（运行时取词）
 local ELEMENTS = {
-  { id = "minimap_frame", labelKey = "ES_MM_FRAME" },
+  { id = "minimap_outer", labelKey = "ES_MM_OUTER" },
   { id = "minimap_bg",    labelKey = "ES_MM_BG" },
 }
 

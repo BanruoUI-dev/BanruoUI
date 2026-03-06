@@ -192,6 +192,33 @@ local function getElemState(themeId, elementId)
   if not themeId or not elementId then return nil end
   BanruoUIDB.elementSwitch[themeId] = BanruoUIDB.elementSwitch[themeId] or {}
   BanruoUIDB.elementSwitch[themeId][elementId] = BanruoUIDB.elementSwitch[themeId][elementId] or {}
+
+  -- v2.0.20 migration/alias:
+  -- Keep compatibility with older elementIds used by previous sub-modules.
+  -- Minimap: minimap_frame -> minimap_outer
+  if elementId == "minimap_outer" and (not BanruoUIDB.elementSwitch[themeId][elementId] or next(BanruoUIDB.elementSwitch[themeId][elementId]) == nil) then
+    if type(BanruoUIDB.elementSwitch[themeId]["minimap_frame"]) == "table" then
+      BanruoUIDB.elementSwitch[themeId][elementId] = BanruoUIDB.elementSwitch[themeId]["minimap_frame"]
+    end
+  end
+  -- Misc: trim_top/trim_bottom, decor_1..decor_8 -> misc_top_strip/misc_bottom_strip, misc_deco1..8
+  if elementId == "misc_top_strip" and (not BanruoUIDB.elementSwitch[themeId][elementId] or next(BanruoUIDB.elementSwitch[themeId][elementId]) == nil) then
+    if type(BanruoUIDB.elementSwitch[themeId]["trim_top"]) == "table" then
+      BanruoUIDB.elementSwitch[themeId][elementId] = BanruoUIDB.elementSwitch[themeId]["trim_top"]
+    end
+  end
+  if elementId == "misc_bottom_strip" and (not BanruoUIDB.elementSwitch[themeId][elementId] or next(BanruoUIDB.elementSwitch[themeId][elementId]) == nil) then
+    if type(BanruoUIDB.elementSwitch[themeId]["trim_bottom"]) == "table" then
+      BanruoUIDB.elementSwitch[themeId][elementId] = BanruoUIDB.elementSwitch[themeId]["trim_bottom"]
+    end
+  end
+  local n = elementId and elementId:match("^misc_deco(%d+)$")
+  if n then
+    local oldKey = "decor_" .. n
+    if (not BanruoUIDB.elementSwitch[themeId][elementId] or next(BanruoUIDB.elementSwitch[themeId][elementId]) == nil) and type(BanruoUIDB.elementSwitch[themeId][oldKey]) == "table" then
+      BanruoUIDB.elementSwitch[themeId][elementId] = BanruoUIDB.elementSwitch[themeId][oldKey]
+    end
+  end
   return BanruoUIDB.elementSwitch[themeId][elementId]
 end
 
@@ -279,7 +306,7 @@ local function CreateElementSwitchPage(parent)
     if colW < 260 then colW = 260 end
 
     -- Step7：Bre 扫描（仅用于命中回显；不做任何写操作）
-    local rootName = getActiveRootName()
+    local rootName, themeId = getActiveRootName()
     local scan = nil
     if B and type(B.BRE_B1_ScanRoot) == "function" then
       scan = B:BRE_B1_ScanRoot(rootName)
@@ -375,9 +402,29 @@ local function CreateElementSwitchPage(parent)
             variants = B:BRE_ListDirectChildrenObjs(eg.id, idx)
           end
 
-          -- 静默回显：根据 WA 子项启用状态决定默认选中项
+          -- 选中项回显优先级：DB（用户选择） > WA 静默推断（仅首次/未绑定）
           local selected = nil
-          if type(variants) == "table" and #variants > 0 and B and type(B.BRE_IsNeverById) == "function" then
+
+          -- 1) DB 回显（不允许被刷新覆盖）
+          local st = themeId and getElemState(themeId, elementId) or nil
+          local dbId = st and st.variantId or nil
+          local dbTitle = st and st.variantTitle or nil
+          if dbId and dbId ~= "" then
+            -- 若 DB 未存 title，则从 variants 反查一次
+            if (not dbTitle or dbTitle == "") and type(variants) == "table" then
+              for i = 1, #variants do
+                local vv = variants[i]
+                if vv and vv.id == dbId then
+                  dbTitle = vv.title
+                  break
+                end
+              end
+            end
+            selected = { id = dbId, title = dbTitle }
+          end
+
+          -- 2) 未绑定时才允许用 WA 运行态推断默认选中项
+          if not selected and type(variants) == "table" and #variants > 0 and B and type(B.BRE_IsNeverById) == "function" then
             local enabled = {}
             for i = 1, #variants do
               local v = variants[i]
@@ -397,7 +444,6 @@ local function CreateElementSwitchPage(parent)
             end
           end
 
-          local _, themeId = getActiveRootName()
           item:SetVariants(variants, selected and selected.id or nil, selected and selected.title or nil, function(v)
             -- Step7：互斥切换（写 never）。
             -- 口径：关闭是硬权限（Never=true 一票否决）；开启只是放行（Never=false 仍受 WA 自身 Load/Trigger 约束）。
@@ -424,7 +470,7 @@ local function CreateElementSwitchPage(parent)
               if B.BRE_RebuildDisplays and #rebuild > 0 then
                 B:BRE_RebuildDisplays(rebuild)
               else
-                B:BRE_RefreshLoads()
+                B:BRE_RefreshLoads(rootName)
               end
             end
 
