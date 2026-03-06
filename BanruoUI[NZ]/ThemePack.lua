@@ -13,8 +13,9 @@ B:RegisterTheme({
   title   = title,
   author  = "BanruoUI",
   version = "1.0.0",
-  preview = "Interface\\AddOns\\BANRUOUI[NZ]\\Media\\Previews\\preview.tga",
+  preview = "Interface\\AddOns\\BanruoUI[NZ]\\Media\\Previews\\preview.tga",
 
   bre  = { main = BRE_ID, groupName = "BANRUOUI[NZ]" },
   elvui = { profile = ELV_ID, profileName = "BANRUOUI[NZ]" },
 })
+

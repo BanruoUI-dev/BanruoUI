@@ -5,7 +5,19 @@
 ## Version: v2.0.24
 ## SavedVariables: BreSaved
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
+## RequiredDeps: BanruoUI
 ## X-Part-Of: BanruoUI
+## Category-enUS: UI Overhaul
+## Category-deDE: UI-Überholung
+## Category-esES: Renovación de la UI
+## Category-esMX: Renovación de la UI
+## Category-itIT: Revisione dell'UI
+## Category-frFR: Révision de l'UI
+## Category-ptBR: Renovação da UI
+## Category-ruRU: Переработка интерфейса
+## Category-koKR: UI 개편
+## Category-zhCN: UI重构
+## Category-zhTW: UI重構
 
 Libs/LibStub/LibStub.lua
 Libs/LibSerialize/LibSerialize.lua

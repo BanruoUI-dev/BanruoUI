@@ -27,7 +27,7 @@ set FAIL=0
 call :update_toc "BanruoUI\BanruoUI.toc"
 call :update_toc "BanruoUI_elms\BanruoUI_elms.toc"
 call :update_toc "BanruoUI_options\BanruoUI_options.toc"
-call :update_toc "BANRUOUI[NZ]\BanruoUI[NZ].toc"
+call :update_toc "BanruoUI[NZ]\BanruoUI[NZ].toc"
 
 echo.
 echo =========================================
@@ -55,3 +55,4 @@ if errorlevel 1 (
 echo [OK] %~1 -^> !NEW_IFACE!
 set /a SUCCESS+=1
 goto :eof
+

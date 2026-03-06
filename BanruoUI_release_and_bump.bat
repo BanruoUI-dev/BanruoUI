@@ -10,7 +10,7 @@ rem ===== TOC files =====
 set "TOC_MAIN=%SRC%\BanruoUI\BanruoUI.toc"
 set "TOC_ELMS=%SRC%\BanruoUI_elms\BanruoUI_elms.toc"
 set "TOC_OPTIONS=%SRC%\BanruoUI_options\BanruoUI_options.toc"
-set "TOC_NZ=%SRC%\BANRUOUI[NZ]\BanruoUI[NZ].toc"
+set "TOC_NZ=%SRC%\BanruoUI[NZ]\BanruoUI[NZ].toc"
 
 rem ===== Check destination exists =====
 if not exist "%DST%" (
@@ -26,8 +26,8 @@ if not exist "%SRC%\BanruoUI" (
     pause
     exit /b 1
 )
-if not exist "%SRC%\BANRUOUI[NZ]" (
-    echo ERROR: Missing folder %SRC%\BANRUOUI[NZ]
+if not exist "%SRC%\BanruoUI[NZ]" (
+    echo ERROR: Missing folder %SRC%\BanruoUI[NZ]
     pause
     exit /b 1
 )
@@ -148,7 +148,7 @@ echo [3/7] Copy selected folders...
 robocopy "%SRC%\BanruoUI" "%STAGE%\BanruoUI" /E /R:1 /W:1 >nul
 if errorlevel 8 goto :error
 
-robocopy "%SRC%\BANRUOUI[NZ]" "%STAGE%\BANRUOUI[NZ]" /E /R:1 /W:1 >nul
+robocopy "%SRC%\BanruoUI[NZ]" "%STAGE%\BanruoUI[NZ]" /E /R:1 /W:1 >nul
 if errorlevel 8 goto :error
 
 robocopy "%SRC%\BanruoUI_elms" "%STAGE%\BanruoUI_elms" /E /R:1 /W:1 >nul
@@ -191,7 +191,7 @@ echo %NOTE%
 echo.
 echo Packed folders:
 echo - BanruoUI
-echo - BANRUOUI[NZ]
+echo - BanruoUI[NZ]
 echo - BanruoUI_elms
 echo - BanruoUI_options
 ) > "%CHANGELOG%"

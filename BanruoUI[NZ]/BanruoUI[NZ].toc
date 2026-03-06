@@ -1,13 +1,12 @@
 ﻿## Interface: 120001,120000
-## Title: BanruoUI_Options
-## Notes: Options panel for BanruoUI_elms (BanruoUI)
+## Title: BanruoUI [Demo Theme]
+## Title-zhCN: BanruoUI 【暗黑主题包_内置】
+## Title-enUS: BanruoUI [Demo Theme]
+## Notes: BANRUOUI[NZ]
 ## Author: BanruoUI
 ## Version: v2.0.24
-## RequiredDeps: BanruoUI_elms
-## LoadOnDemand: 1
-## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## RequiredDeps: BanruoUI
-## X-Part-Of: BanruoUI
+## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Category-enUS: UI Overhaul
 ## Category-deDE: UI-Überholung
 ## Category-esES: Renovación de la UI
@@ -20,7 +19,8 @@
 ## Category-zhCN: UI重构
 ## Category-zhTW: UI重構
 
-Core/Options.lua
-Dev/FixtureTree.lua
-Dev/FixtureTreeIndex.lua
-Dev/DevCheck.lua
+Data_Bre_zh.lua
+Data_Bre_en.lua
+BreLoader.lua
+Data_ElvUI.lua
+ThemePack.lua
