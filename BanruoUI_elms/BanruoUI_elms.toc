@@ -1,8 +1,8 @@
-## Interface: 120001,120000
+﻿## Interface: 120001,120000
 ## Title: BanruoUI_elms
 ## Notes: BanruoUI child plugin (Elms) - engine rebuild skeleton (12.0+)
 ## Author: BanruoUI / BrA rebuild
-## Version: v2.0.21
+## Version: v2.0.23
 ## SavedVariables: BreSaved
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## X-Part-Of: BanruoUI

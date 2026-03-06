@@ -1,9 +1,9 @@
-## Interface: 120001,120000
+﻿## Interface: 120001,120000
 ## Title: BanruoUI [Demo Theme]
-## Title-zhCN: BanruoUI [内置主题包]
+## Title-zhCN: BanruoUI [鍐呯疆涓婚鍖匽
 ## Notes: BANRUOUI[NZ]
 ## Author: BanruoUI
-## Version: v2.0.21
+## Version: v2.0.23
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 
