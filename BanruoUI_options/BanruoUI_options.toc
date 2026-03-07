@@ -2,7 +2,7 @@
 ## Title: BanruoUI_Options
 ## Notes: Options panel for BanruoUI_elms (BanruoUI)
 ## Author: BanruoUI
-## Version: v2.0.24
+## Version: v2.0.22
 ## RequiredDeps: BanruoUI_elms
 ## LoadOnDemand: 1
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
