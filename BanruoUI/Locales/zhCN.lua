@@ -78,20 +78,6 @@ L['DECLARATION_GITHUB'] = 'GitHub'
 L['DECLARATION_BILIBILI'] = '更多主题B站搜 BanruoUI'
 L['DECLARATION_YOUTUBE'] = '更多主题YouTube'
 
-L['MODULE_AUTHOR_FAREWELL'] = '【作者告别】'
-L['AUTHOR_FAREWELL_DESC'] = [[
-3.7.2026 是我最后一次更新。
-
-如果你更新了插件，但是没有获得新的种族雕像，请强制还原默认设置 2 次。
-
-我业余时间写了这个插件，短时间不会再更新插件。
-
-如果你喜欢这个插件或者有什么疑问，请到我的账号下面留言。
-
-我在各大平台都留下了痕迹，请搜 BanruoUI 即可。
-
-江湖再见。
-]]
 
 -- 元素切换 - 动态相框
 L['ES_DPF_TITLE'] = '动态相框'

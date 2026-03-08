@@ -1,21 +1,21 @@
-## Interface: 120001,120000
+﻿## Interface: 120001,120000
 ## Title: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Notes: =
 ## Author: BANRUO
-## Version: v2.0.22
+## Version: v2.0.23
 ## SavedVariables: BanruoUIDB
 ## Category-enUS: UI Overhaul
-## Category-deDE: UI-Überholung
-## Category-esES: Renovación de la UI
-## Category-esMX: Renovación de la UI
+## Category-deDE: UI-脺berholung
+## Category-esES: Renovaci贸n de la UI
+## Category-esMX: Renovaci贸n de la UI
 ## Category-itIT: Revisione dell'UI
-## Category-frFR: Révision de l'UI
-## Category-ptBR: Renovação da UI
-## Category-ruRU: Переработка интерфейса
-## Category-koKR: UI 개편
-## Category-zhCN: UI重构
-## Category-zhTW: UI重構
+## Category-frFR: R茅vision de l'UI
+## Category-ptBR: Renova莽茫o da UI
+## Category-ruRU: 袩械褉械褉邪斜芯褌泻邪 懈薪褌械褉褎械泄褋邪
+## Category-koKR: UI 臧滍幐
+## Category-zhCN: UI閲嶆瀯
+## Category-zhTW: UI閲嶆
 
 
 Core/Bootstrap.lua
@@ -38,7 +38,6 @@ Modules/BrMusic.lua
 Modules/Placeholder.lua
 Modules/ElvuiString.lua
 Modules/Declaration.lua
-Modules/AuthorFarewell.lua
 Core/Init.lua
 Core/Frame.lua
 Core/Main.lua

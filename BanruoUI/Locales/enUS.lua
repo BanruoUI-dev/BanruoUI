@@ -77,20 +77,6 @@ L['DECLARATION_GITHUB'] = 'GitHub'
 L['DECLARATION_BILIBILI'] = 'More Theme Bilibili'
 L['DECLARATION_YOUTUBE'] = 'More Theme YouTube'
 
-L['MODULE_AUTHOR_FAREWELL'] = 'Author Farewell'
-L['AUTHOR_FAREWELL_DESC'] = [[
-March 7, 2026 is my last update.
-
-If you updated the plugin but did not get the new race statues, please force-restore default settings twice.
-
-I built this plugin in my spare time, so there will be no updates for a while.
-
-If you like this plugin or have any questions, please leave a message under my account.
-
-I have left traces on major platforms. Search for BanruoUI.
-
-See you in Azeroth.
-]]
 
 -- Element Switch - Dynamic Portrait Frame
 L['ES_DPF_TITLE'] = 'Dynamic Portrait Frame'

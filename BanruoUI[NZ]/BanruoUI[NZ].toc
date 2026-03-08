@@ -3,7 +3,7 @@
 ## Title-zhCN: BanruoUI 【暗黑主题包_内置】
 ## Notes: BANRUOUI[NZ]
 ## Author: BanruoUI
-## Version: v2.0.22
+## Version: v2.0.23
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Category-enUS: UI Overhaul
