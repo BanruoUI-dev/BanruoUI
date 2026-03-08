@@ -1,4 +1,4 @@
-﻿## Interface: 120001,120000
+## Interface: 120001,120000
 ## Title: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Notes: =
@@ -38,6 +38,7 @@ Modules/BrMusic.lua
 Modules/Placeholder.lua
 Modules/ElvuiString.lua
 Modules/Declaration.lua
+Modules/AuthorFarewell.lua
 Core/Init.lua
 Core/Frame.lua
 Core/Main.lua
