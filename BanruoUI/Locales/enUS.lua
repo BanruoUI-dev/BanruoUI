@@ -76,6 +76,7 @@ Mode Code: /run Bre.Profile:SetMode("FULL")
 L['DECLARATION_GITHUB'] = 'GitHub'
 L['DECLARATION_BILIBILI'] = 'More Theme Bilibili'
 L['DECLARATION_YOUTUBE'] = 'More Theme YouTube'
+L['DECLARATION_X'] = 'X Account'
 
 
 -- Element Switch - Dynamic Portrait Frame

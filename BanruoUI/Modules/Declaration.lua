@@ -6,7 +6,8 @@ if not B then return end
 
 local URL_GITHUB  = 'https://github.com/BanruoUI-dev/BanruoUI'
 local URL_BILIBILI = 'https://www.bilibili.com/video/BV18MAkzZEJF/?spm_id_from=333.1387.homepage.video_card.click&vd_source=a1aa1eb46fda2b934c3ca33f5dcf1b2a'
-local URL_YOUTUBE = 'https://www.youtube.com/watch?v=4BI7JlxN_UQ'
+local URL_YOUTUBE = 'https://www.youtube.com/watch?v=ejx34klSS3s'
+local ACCOUNT_X = '@BANRUOUI'
 
 local function CreateReadonlyLinkBox(parent, w)
   local eb = CreateFrame('EditBox', nil, parent, 'InputBoxTemplate')
@@ -66,13 +67,13 @@ local function CreatePage(parent)
     return eb
   end
 
-  page._ebBili    = AddLinkRow('DECLARATION_BILIBILI', URL_BILIBILI)
-  
-  -- 仅非中文客户端显示 Youtube 和 Github
   local locale = GetLocale()
-  if locale ~= "zhCN" then
+  if locale == "zhCN" then
+    page._ebBili = AddLinkRow('DECLARATION_BILIBILI', URL_BILIBILI)
+  else
     page._ebGitHub  = AddLinkRow('DECLARATION_GITHUB', URL_GITHUB)
     page._ebYouTube = AddLinkRow('DECLARATION_YOUTUBE', URL_YOUTUBE)
+    page._ebX       = AddLinkRow('DECLARATION_X', ACCOUNT_X)
   end
 
   function page:RefreshTexts()

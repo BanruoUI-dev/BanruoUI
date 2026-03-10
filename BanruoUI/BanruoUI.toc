@@ -3,7 +3,7 @@
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Notes: =
 ## Author: BANRUO
-## Version: v2.0.23
+## Version: v2.0.25
 ## SavedVariables: BanruoUIDB
 ## Category-enUS: UI Overhaul
 ## Category-deDE: UI-脺berholung

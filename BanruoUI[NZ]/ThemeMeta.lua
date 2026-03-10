@@ -1,0 +1,18 @@
+﻿local _, ns = ...
+ns = ns or _G
+
+-- Theme pack metadata.
+-- Future packs only need to edit this file (plus data/media files).
+ns.ThemeMeta = {
+  themeId = "nz",
+  themeName = "BANRUOUI[NZ]",
+  titleZhCN = "暗黑内置主题包",
+  titleEnUS = "BanruoUI [NZ]",
+
+  author = "BanruoUI",
+  version = "1.0.0",
+  preview = "Interface\\AddOns\\BanruoUI[NZ]\\Media\\Previews\\preview.tga",
+
+  breId = "banruoui_nz_bre_main",
+  elvProfileId = "banruoui_nz_elv_profile",
+}
