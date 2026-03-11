@@ -6,11 +6,11 @@ ns = ns or _G
 ns.ThemeMeta = {
   themeId = "nz",
   themeName = "BanruoUI[NZ]",
-  titleZhCN = "暗黑内置主题包",
+  titleZhCN = "BanruoUI暗黑内置主题包",
   titleEnUS = "BanruoUI [NZ]",
 
-  author = "BanruoUI",
-  version = "1.0.0",
+  author = "Banruo",
+  version = "1.0",
   preview = "Interface\\\\AddOns\\\\BanruoUI[NZ]\\\\Media\\\\Previews\\\\preview.tga",
 
   breId = "banruoui_nz_bre_main",

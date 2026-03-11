@@ -1,23 +1,23 @@
 ## Interface: 120001,120000
 ## Title: BanruoUI[NZ]
-## Title-zhCN: 暗黑内置主题包
+## Title-zhCN: BanruoUI暗黑内置主题包
 ## Title-enUS: BanruoUI [NZ]
 ## Notes: BanruoUI[NZ]
-## Author: BanruoUI
-## Version: 1.0.0
+## Author: Banruo
+## Version: 1.0
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Category-enUS: UI Overhaul
-## Category-deDE: UI-闂傚倸鍊搁崐鐑芥嚄閸洖鍌ㄧ憸鏃堛€佸棰濇晣闁靛繆鏅滈弲顏堟⒑缂佹ɑ鐨戦柛銊︻渼olung
-## Category-esES: Renovaci闂傚倸鍊峰ù鍥х暦閸偅鍙忛柣銏㈩焾缁€澶嬩繆閵堝懏鍣洪柛?de la UI
-## Category-esMX: Renovaci闂傚倸鍊峰ù鍥х暦閸偅鍙忛柣銏㈩焾缁€澶嬩繆閵堝懏鍣洪柛?de la UI
+## Category-deDE: UI-Überholung
+## Category-esES: Renovación de la UI
+## Category-esMX: Renovación de la UI
 ## Category-itIT: Revisione dell'UI
-## Category-frFR: R闂傚倸鍊搁崐宄懊归崶顒€纾婚柟鐗堟緲閸屻劎鎲稿澶嬪仼闁汇垻顭堥崣濠勭棯椤撶偞缍梠n de l'UI
-## Category-ptBR: Renova闂傚倸鍊搁崐椋庣矆娓氣偓瀹曘儳鈧綆鍠栫壕鍧楁煙閹増顥夐柣鎺戠仛閵囧嫰骞掗幋婵冨亾閹间礁鍑犻幖娣妽閻撶喖鏌曟繛褍鎳庣粈?da UI
-## Category-ruRU: 闂傚倸鍊峰ù鍥х暦閻㈢纾婚柣鎰惈閺勩儵鏌涢幇闈涙灈闁汇倗鍋撶换婵囩節閸屾粌鈷婄紓鍌氱У閻楁濡甸崟顖氱疀闁宠桨璁查崑鎾诲冀椤撶偟鐛ラ梺褰掑亰閸擄箓鎮㈤崱娑欏仯閺夌偞濯介鐔兼煕鎼淬垻鈯曠紒缁樼⊕缁轰粙宕妷褎姣囬梻浣筋嚃閸犳牠宕查弻銉⑩偓锕傚Ω閳轰胶顦ㄩ梺缁樺姦閸忔﹢寮搁崨瀛樷拻濞达絼璀﹂悞鐐亜閹存繃顥㈢€规洖缍婂畷褰掝敋閸涱厽顓挎俊鐐€栧濠氬磻閹炬番浜滄い鎾寸矊婵倻鈧娲栧畷顒勨€旈崘顔嘉ㄧ憸宥夊几濞戙垺鐓欐い鏃傚帶濡茬粯銇勯婊冨鐎规洘锕㈤崺锟犲磼濞戞﹩浼嗛梻鍌氬€搁崐椋庢閿熺姴绐楁俊銈呮噹缁犱即鏌熼幆鐗堫棄闁?闂傚倸鍊搁崐鐑芥嚄閸洖绠犻柟鎹愵嚙閻ゎ噣鏌涜椤ㄥ棝宕戠€ｎ喗鐓欓柣妤€鐗婄欢鏌ユ煢閸愵亜鏋涢柡灞剧〒娴狅箓宕滆閻撲線姊洪崫銉バｉ柛鏃€鐟╅獮鍐潨閳ь剟骞冨▎鎰闁告劏鏅╅埀顒侇殔閳规垿鎮欑仦鍌氫划缂備胶濮甸悧鐘荤嵁閸愩劎鏆嬮梺顓ㄥ閸欏棝姊洪崨濠傚闁稿鎸婚悺蹇撯攽閿涘嫬浜奸柛濞у懐涓嶉柟杈剧畱閻ゎ噣鏌涜椤ㄦ劗绱為弽顓犲彄闁搞儯鍔庨埊鏇㈡煕鐎ｎ亶鍎旈柡灞剧洴椤㈡洟鎮╅懠顒€濮堕梻浣芥〃閼冲爼宕伴弽顓炶摕闁挎繂顦伴崑鍕煕濠靛嫬鍔ら柣鎾亾濠碉紕鍋戦崐鏍垂閻㈡潌鍥濞戞碍娈?
-## Category-koKR: UI 闂傚倸鍊搁崐宄懊归崶銊х彾闁割偁鍎遍崹鍌炴煕瀹€鈧崑娑氱矆鐎ｎ偁浜滈柟鎹愭硾鍟搁梺鍛婎焾濞呮洘绌?
-## Category-zhCN: UI闂傚倸鍊搁崐鎼佸磹閹间礁纾归柣鎴ｅГ閸婂潡鏌ㄩ弴姘舵濞存粌缍婇弻娑㈠箛閸忓摜鏁栭梺娲诲幗閹瑰洭寮婚敐澶婎潊闁绘ê鍟块弳鍫ユ⒑?
-## Category-zhTW: UI闂傚倸鍊搁崐鎼佸磹閹间礁纾归柣鎴ｅГ閸婂潡鏌ㄩ弴姘舵濞存粌缍婇弻娑㈠箛閸忓摜鏁栭梺娲诲幗閹瑰洭寮婚敐澶婎潊闁靛牆妫斿锔剧磽?
+## Category-frFR: Révision de l'UI
+## Category-ptBR: Renovação da UI
+## Category-ruRU: Переработка интерфейса
+## Category-koKR: UI 개편
+## Category-zhCN: UI重构
+## Category-zhTW: UI重構
 
 Theme/ThemeMeta.lua
 Data/Data_Bre_zh.lua
