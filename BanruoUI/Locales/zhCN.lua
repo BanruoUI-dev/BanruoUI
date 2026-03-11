@@ -185,3 +185,38 @@ L['MINIMAP_MENU_OPEN'] = '打开'
 L['MINIMAP_MENU_HIDE'] = '隐藏小地图按钮'
 L['MINIMAP_MENU_SHOW'] = '显示小地图按钮'
 
+
+L['MODULE_THEMEPACK_GUIDE'] = '自制主题包'
+L['THEMEPACK_GUIDE_BODY'] = [[
+1.复制 BanruoUI[NZ] 文件夹。
+文件夹重命名为你的主题包名（建议：品牌[主题名]，全英文，例：Br[Dark]）。
+
+2.进入新主题包目录，双击 BanruoUI_theme_pack_wizard.bat。
+按提示填写标题/作者/版本。
+
+3.把你自己准备的素材放在你自己的主题包目录 Media\... 下。
+例如：Interface\AddOns\Br[Dark]\Media\
+
+4.进游戏打开 BanruoUI -> 元素管理（Bre）。
+规则：
+带{} 的名字不能改，其他随意。
+最外层父组 root 名必须与主题包文件夹名一致。
+字符串里的素材路径改成你自己主题包的 Media 路径。
+做好后导出字符串。
+
+5.导出后把 Bre 字符串放到主题包根目录：
+Interface\AddOns\Br[Dark]\Bre_string.txt
+（可选）ElvUI 字符串放到：
+Interface\AddOns\Br[Dark]\Elvui_string.txt
+再运行一次 BanruoUI_theme_pack_wizard.bat 自动写入 Data 文件。
+
+6.测试：
+勾选 BanruoUI + 你的主题包，/reload。
+在 BanruoUI 下拉切换主题。
+如提示 [更新了，请还原]，点“强制还原默认”。
+
+7.主题包更新（重要）：
+如更新了主题包内容，请修改主题包 .toc 的 Version。
+或者直接用 bat 改版本（更方便）。
+]]
+

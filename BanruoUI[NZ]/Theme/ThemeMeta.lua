@@ -11,7 +11,7 @@ ns.ThemeMeta = {
 
   author = "Banruo",
   version = "1.3",
-  preview = "Interface\\\\AddOns\\\\BanruoUI[NZ]\\\\Media\\\\Previews\\\\preview.tga",
+  preview = "Interface\\AddOns\\BanruoUI[NZ]\\Media\\Previews\\preview.tga",
 
   breId = "banruoui_nz_bre_main",
   elvProfileId = "banruoui_nz_elv_profile",

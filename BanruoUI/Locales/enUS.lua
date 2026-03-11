@@ -187,3 +187,37 @@ L['BRMUSIC_GAME_03'] = 'Game Track 03'
 L['BRMUSIC_GAME_04'] = 'Game Track 04'
 L['BRMUSIC_GAME_05'] = 'Game Track 05'
 
+
+L['MODULE_THEMEPACK_GUIDE'] = 'Theme Pack Guide'
+L['THEMEPACK_GUIDE_BODY'] = [[
+1. Copy the BanruoUI[NZ] folder.
+Rename the folder to your theme-pack name (recommended: Brand[Theme], e.g. Br[Dark]).
+
+2. Enter the new theme-pack folder and run BanruoUI_theme_pack_wizard.bat.
+Fill in title / author / version.
+
+3. Put your assets under your theme-pack Media\... folder.
+Example: Interface\AddOns\Br[Dark]\Media\
+
+4. In game: BanruoUI -> Element Manager (Bre).
+Rules:
+Do not change names wrapped by {}.
+The top-level root group name must match the theme-pack folder name.
+Update media paths in the exported string to your own Media path.
+Export the string after editing.
+
+5. Put exported strings in the theme-pack root:
+Bre: Interface\AddOns\Br[Dark]\Bre_string.txt
+(Optional) ElvUI: Interface\AddOns\Br[Dark]\Elvui_string.txt
+Run BanruoUI_theme_pack_wizard.bat again to write Data files.
+
+6. Test:
+Enable BanruoUI + your theme pack, then /reload.
+Switch theme from BanruoUI dropdown.
+If [Updated, restore required] appears, click Force Restore.
+
+7. Theme-pack updates (important):
+When content changes, update .toc Version,
+or simply use the bat wizard to bump version.
+]]
+
