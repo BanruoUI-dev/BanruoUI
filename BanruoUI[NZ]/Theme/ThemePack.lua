@@ -12,6 +12,15 @@ local ELV_ID   = meta.elvProfileId or ("banruoui_" .. THEME_ID .. "_elv_profile"
 local loc = GetLocale and GetLocale() or "enUS"
 local title = (loc == "zhCN") and (meta.titleZhCN or "BanruoUI Theme") or (meta.titleEnUS or "BanruoUI Theme")
 
+local data = (loc == "zhCN") and ns.BRE_ZH or ns.BRE_EN
+if type(data) == "string" and data ~= "" then
+  B:RegisterBRE({
+    id   = BRE_ID,
+    name = meta.themeName or ("BANRUOUI[" .. string.upper(THEME_ID) .. "]"),
+    data = data,
+  })
+end
+
 B:RegisterTheme({
   id      = THEME_ID,
   title   = title,
