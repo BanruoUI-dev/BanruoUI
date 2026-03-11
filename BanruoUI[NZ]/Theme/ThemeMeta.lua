@@ -10,7 +10,7 @@ ns.ThemeMeta = {
   titleEnUS = "BanruoUI [NZ]",
 
   author = "Banruo",
-  version = "1.0",
+  version = "1.3",
   preview = "Interface\\\\AddOns\\\\BanruoUI[NZ]\\\\Media\\\\Previews\\\\preview.tga",
 
   breId = "banruoui_nz_bre_main",

@@ -31,6 +31,8 @@ L['POPUP_RESTORE_TEXT'] = [[确定要【强制还原默认】吗？
 -- Step2 (v2.5.3) Core/Main localized
 L["DD_NO_THEME_PACK"] = "未检测到主题包"
 L["DD_UNKNOWN"] = "未知"
+L["DD_THEME_UPDATE_MARK"] = "!"
+L["DD_THEME_UPDATE_SUFFIX"] = "[更新了，请还原]"
 L["PREVIEW_NO_THEME_PACK"] = "未检测到主题包。\n\n请安装主题包插件（独立 AddOn），然后 /reload。\n点击右上【帮助】查看说明。"
 L["PREVIEW_AUTHOR_LINE"] = "作者：%s"
 L["PREVIEW_VERSION_LINE"] = "版本：%s"

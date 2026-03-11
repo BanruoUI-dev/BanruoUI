@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$TitleZhInput = '',
   [string]$TitleEnInput = '',
   [string]$AuthorInput = '',
@@ -6,6 +6,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [Console]::OutputEncoding
 
 function Clean([string]$s) {
   if ($null -eq $s) { return '' }
@@ -41,6 +44,15 @@ $addonDir = Split-Path -Leaf $themeDir
 $metaPath = Join-Path $themeDir 'Theme\ThemeMeta.lua'
 $tocPath = Get-ChildItem -LiteralPath $themeDir -File -Filter '*.toc' | Select-Object -First 1 -ExpandProperty FullName
 if (-not $tocPath) { throw 'No .toc file found.' }
+$expectedTocName = $addonDir + '.toc'
+$expectedTocPath = Join-Path $themeDir $expectedTocName
+if ((Split-Path -Leaf $tocPath) -ne $expectedTocName) {
+  if (Test-Path -LiteralPath $expectedTocPath) {
+    throw ('Target TOC already exists: ' + $expectedTocName)
+  }
+  Rename-Item -LiteralPath $tocPath -NewName $expectedTocName
+  $tocPath = $expectedTocPath
+}
 if (-not (Test-Path -LiteralPath $metaPath)) { throw 'Theme\\ThemeMeta.lua not found.' }
 
 $sysLocale = [System.Globalization.CultureInfo]::InstalledUICulture.Name
@@ -75,14 +87,31 @@ Write-Host '  Elvui_string.txt'
 Write-Host '  (empty file = skip)'
 Write-Host ''
 
+$curTitleZh = if ($exTitleZh -ne '') { $exTitleZh } else { $zhFallback }
+$curTitleEn = if ($exTitleEn -ne '') { $exTitleEn } else { $enFallback }
+$curAuthor = if ($exAuthor -ne '') { $exAuthor } else { 'BanruoUI' }
+$curVersion = if ($exVersion -ne '') { $exVersion } else { '1.0.0' }
+
 if ($locMode -eq 'zh' -and [string]::IsNullOrWhiteSpace($TitleZhInput)) {
-  $TitleZhInput = Read-Host 'Zh title (blank keep current)'
+  $TitleZhInput = Read-Host ('中文标题（留空保留当前） [当前: ' + $curTitleZh + ']')
 }
 if ($locMode -eq 'en' -and [string]::IsNullOrWhiteSpace($TitleEnInput)) {
-  $TitleEnInput = Read-Host 'En title (blank keep current)'
+  $TitleEnInput = Read-Host ('En title (blank keep current) [current: ' + $curTitleEn + ']')
 }
-if ([string]::IsNullOrWhiteSpace($AuthorInput)) { $AuthorInput = Read-Host 'Author (blank keep current)' }
-if ([string]::IsNullOrWhiteSpace($VersionInput)) { $VersionInput = Read-Host 'Version (blank keep current)' }
+if ([string]::IsNullOrWhiteSpace($AuthorInput)) {
+  if ($locMode -eq 'zh') {
+    $AuthorInput = Read-Host ('作者（留空保留当前） [当前: ' + $curAuthor + ']')
+  } else {
+    $AuthorInput = Read-Host ('Author (blank keep current) [current: ' + $curAuthor + ']')
+  }
+}
+if ([string]::IsNullOrWhiteSpace($VersionInput)) {
+  if ($locMode -eq 'zh') {
+    $VersionInput = Read-Host ('版本号（留空保留当前） [当前: ' + $curVersion + ']')
+  } else {
+    $VersionInput = Read-Host ('Version (blank keep current) [current: ' + $curVersion + ']')
+  }
+}
 
 $titleZh = if (-not [string]::IsNullOrWhiteSpace($TitleZhInput)) { Clean $TitleZhInput } elseif ($exTitleZh -ne '') { $exTitleZh } else { $zhFallback }
 $titleEn = if (-not [string]::IsNullOrWhiteSpace($TitleEnInput)) { Clean $TitleEnInput } elseif ($exTitleEn -ne '') { $exTitleEn } else { $enFallback }
@@ -181,5 +210,7 @@ Write-Host ('ThemeMeta : ' + $metaPath)
 Write-Host ('TOC       : ' + $tocPath)
 Write-Host ('BRE       : ' + $breStatus + ' (' + $breFile + ')')
 Write-Host ('ElvUI     : ' + $elvStatus + ' (Data_ElvUI.lua)')
+
+
 
 

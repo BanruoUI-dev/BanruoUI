@@ -79,6 +79,7 @@ function B:CreateMainFrame()
   local themeLabel = themeBox:CreateFontString(nil, "OVERLAY", (B.Font and B.Font:Normal() or "GameFontNormal"))
   themeLabel:SetPoint("LEFT", 0, 0)
   themeLabel:SetText((B and B.Loc) and B:Loc("LABEL_THEME") or "主题：")
+  self.themeLabel = themeLabel
 
   -- Logo slot (left of header), aligned to theme text baseline
   local logo = bar:CreateTexture(nil, "OVERLAY")

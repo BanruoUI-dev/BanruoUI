@@ -12,11 +12,68 @@ local function ensureDB()
   BanruoUIDB = BanruoUIDB or {}
   BanruoUIDB.activeThemeId = BanruoUIDB.activeThemeId or nil
   BanruoUIDB.themeInit = BanruoUIDB.themeInit or {}
+  BanruoUIDB.themeAckVersion = BanruoUIDB.themeAckVersion or {}
 end
 
 local function getActiveThemeId()
   ensureDB()
   return BanruoUIDB.activeThemeId
+end
+
+local function getThemeVersion(theme)
+  if not theme or theme.version == nil then return "" end
+  return tostring(theme.version)
+end
+
+local function isThemeUpdatePending(theme)
+  if type(theme) ~= "table" then return false end
+  local id = norm(theme.themeId or theme.id)
+  if not id then return false end
+  local ver = getThemeVersion(theme)
+  if ver == "" then return false end
+  ensureDB()
+  local ack = BanruoUIDB.themeAckVersion and BanruoUIDB.themeAckVersion[id] or nil
+  return tostring(ack or "") ~= ver
+end
+
+local function markThemeVersionAck(themeId, theme)
+  local id = norm(themeId)
+  if not id or type(theme) ~= "table" then return end
+  local ver = getThemeVersion(theme)
+  if ver == "" then return end
+  ensureDB()
+  BanruoUIDB.themeAckVersion[id] = ver
+end
+
+local function formatThemeDropdownText(theme)
+  if type(theme) ~= "table" then return "Theme" end
+  local id = theme.themeId or theme.id or "Theme"
+  local title = theme.title or id or "Theme"
+  if not isThemeUpdatePending(theme) then
+    return title
+  end
+  local mark = (B and B.Loc) and B:Loc("DD_THEME_UPDATE_MARK") or "!"
+  local suffix = (B and B.Loc) and B:Loc("DD_THEME_UPDATE_SUFFIX") or "[Updated, please restore]"
+  return ("|cffffd100%s|r %s |cffffd100%s|r"):format(mark, tostring(title), tostring(suffix))
+end
+
+local function hasAnyThemeUpdatePending()
+  local themes = B.GetThemes and B:GetThemes() or {}
+  for _, t in ipairs(themes) do
+    if isThemeUpdatePending(t) then return true end
+  end
+  return false
+end
+
+function B:RefreshThemeLabelAlert()
+  if not self.themeLabel then return end
+  local base = (B and B.Loc) and B:Loc("LABEL_THEME") or "主题："
+  if hasAnyThemeUpdatePending() then
+    local mark = (B and B.Loc) and B:Loc("DD_THEME_UPDATE_MARK") or "!"
+    self.themeLabel:SetText(("|cffffd100%s|r %s"):format(mark, tostring(base)))
+  else
+    self.themeLabel:SetText(base)
+  end
 end
 
 -- Dropdown close behavior: DropDownList1 is shared by all dropdowns
@@ -64,7 +121,7 @@ function B:RefreshThemeDropdown()
 
     for _, t in ipairs(themes) do
       local id = t.themeId or t.id
-      info.text = t.title or id or "Theme"
+      info.text = formatThemeDropdownText(t)
       info.func = function()
         self:SetPendingPreviewTheme(id)
       end
@@ -87,6 +144,7 @@ function B:RefreshThemeDropdown()
   -- 收起状态：必须回显“当前已生效主题”
   self:RefreshThemeDropdownCollapsed()
 
+  if self.RefreshThemeLabelAlert then self:RefreshThemeLabelAlert() end
   -- 预览区使用 pending（不代表已切换）
   self:UpdatePreviewPanel()
   if self.UpdateSwitchButtonState then self:UpdateSwitchButtonState() end
@@ -123,7 +181,7 @@ function B:SetPendingPreviewTheme(themeId)
 
   -- 展开状态允许回显预览选择（收起/失焦会被 hook 回滚到 active）
   if self.themeDD then
-    UIDropDownMenu_SetText(self.themeDD, theme.title)
+    UIDropDownMenu_SetText(self.themeDD, formatThemeDropdownText(theme))
   end
 
   self:UpdatePreviewPanel()
@@ -299,6 +357,58 @@ local function setRootNeverById(rootId, never)
 
   return okRoot, okRoot and "ok" or "set_never_failed"
 end
+
+local function tryHideOldRoot(gn)
+  if type(gn) ~= "string" or gn == "" then
+    return true, "ok"
+  end
+  local okOld, msgOld = setRootNever(gn, true)
+  if okOld then
+    return true, "ok"
+  end
+  -- 历史数据里旧 root 可能已被删/改名；不应阻断新主题切换。
+  if msgOld == "root_not_found" then
+    return true, "old_root_missing_ignored"
+  end
+  return false, msgOld
+end
+
+local function buildLegacyGroupAliases(groupName, themeId)
+  local out, seen = {}, {}
+  local function add(v)
+    if type(v) ~= "string" or v == "" then return end
+    if seen[v] then return end
+    seen[v] = true
+    table.insert(out, v)
+  end
+
+  add(groupName)
+  if type(groupName) == "string" and groupName ~= "" then
+    add(string.upper(groupName))
+    add(string.lower(groupName))
+  end
+
+  local tid = themeId and tostring(themeId) or ""
+  if tid ~= "" then
+    add("BanruoUI[" .. tid .. "]")
+    add("BANRUOUI[" .. string.upper(tid) .. "]")
+    add("banruoui[" .. string.lower(tid) .. "]")
+  end
+
+  return out
+end
+
+local function deleteByKeywordBestEffort(keyword)
+  if not B.BRE_DeleteByKeyword then return true, "skip" end
+  if type(keyword) ~= "string" or keyword == "" then return true, "skip" end
+  local okDel, msgDel = B:BRE_DeleteByKeyword(keyword)
+  if okDel then return true, "ok" end
+  -- 历史残留清理属于“尽力而为”，未命中不应阻断流程。
+  if msgDel == nil or msgDel == "" or msgDel == "root_not_found" or msgDel == "not_found" then
+    return true, "not_found"
+  end
+  return false, msgDel
+end
 local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
   local newCfg = getBreCfg(newTheme)
   if not newTheme or not newCfg or not newCfg.main or newCfg.main == "" then
@@ -312,9 +422,12 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
 
   if mode == "force" then
     -- 强制还原默认：删除式清理 + 重新导入
-    if B.BRE_DeleteByKeyword and type(newGN) == "string" and newGN ~= "" then
-      local okDel, msgDel = B:BRE_DeleteByKeyword(newGN)
-      if not okDel then return false, msgDel end
+    if B.BRE_DeleteByKeyword then
+      local aliases = buildLegacyGroupAliases(newGN, newThemeId)
+      for _, kw in ipairs(aliases) do
+        local okDel, msgDel = deleteByKeywordBestEffort(kw)
+        if not okDel then return false, msgDel end
+      end
     end
 
     local breStr = getBREString(newTheme)
@@ -328,7 +441,7 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
 
     -- 切到新主题（隐藏旧/显示新）
     if type(oldGN) == "string" and oldGN ~= "" and oldGN ~= newGN then
-      local okOld, msgOld = setRootNever(oldGN, true)
+      local okOld, msgOld = tryHideOldRoot(oldGN)
       if not okOld then return false, msgOld end
     end
 
@@ -357,7 +470,7 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
   end
 
   if type(oldGN) == "string" and oldGN ~= "" and oldGN ~= newGN then
-    local okOld, msgOld = setRootNever(oldGN, true)
+    local okOld, msgOld = tryHideOldRoot(oldGN)
     if not okOld then return false, msgOld end
   end
 
@@ -410,6 +523,10 @@ local function runApply(mode)
   if not okBRE then
     B:Print(B:Loc("PRINT_WA_FAIL", tostring(msgBRE)))
     return
+  end
+
+  if mode == "force" then
+    markThemeVersionAck(themeId, theme)
   end
 
   finalizeSuccess(themeId, theme)

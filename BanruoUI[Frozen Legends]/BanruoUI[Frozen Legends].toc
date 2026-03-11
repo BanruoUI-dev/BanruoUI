@@ -1,0 +1,26 @@
+## Interface: 120001,120000
+## Title: BanruoUI[Frozen Legends]
+## Title-zhCN: BanruoUI【金色花园】
+## Title-enUS: BanruoUI [NZ]
+## Notes: BanruoUI[Frozen Legends]
+## Author: Banruo
+## Version: 1.3
+## RequiredDeps: BanruoUI
+## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
+## Category-enUS: UI Overhaul
+## Category-deDE: UI-Überholung
+## Category-esES: Renovación de la UI
+## Category-esMX: Renovación de la UI
+## Category-itIT: Revisione dell'UI
+## Category-frFR: Révision de l'UI
+## Category-ptBR: Renovação da UI
+## Category-ruRU: Переработка интерфейса
+## Category-koKR: UI 개편
+## Category-zhCN: UI重构
+## Category-zhTW: UI重構
+
+Theme/ThemeMeta.lua
+Data/Data_Bre_zh.lua
+Data/Data_Bre_en.lua
+Data/Data_ElvUI.lua
+Theme/ThemePack.lua

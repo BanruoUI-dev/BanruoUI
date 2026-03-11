@@ -4,7 +4,7 @@
 ## Title-enUS: BanruoUI [NZ]
 ## Notes: BanruoUI[NZ]
 ## Author: Banruo
-## Version: 1.0
+## Version: 1.3
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Category-enUS: UI Overhaul

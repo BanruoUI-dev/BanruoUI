@@ -30,6 +30,8 @@ Your tweaks may be overwritten.]]
 -- Step2 (v2.5.3) Core/Main localized
 L["DD_NO_THEME_PACK"] = "No theme pack detected"
 L["DD_UNKNOWN"] = "Unknown"
+L["DD_THEME_UPDATE_MARK"] = "!"
+L["DD_THEME_UPDATE_SUFFIX"] = "[Updated, restore required]"
 L["PREVIEW_NO_THEME_PACK"] = "No theme pack detected.\n\nInstall a theme-pack addon, then /reload.\nClick [Help] for instructions."
 L["PREVIEW_AUTHOR_LINE"] = "Author: %s"
 L["PREVIEW_VERSION_LINE"] = "Version: %s"
