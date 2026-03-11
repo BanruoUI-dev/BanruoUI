@@ -6,7 +6,7 @@ ns = ns or _G
 ns.ThemeMeta = {
   themeId = "nz",
   themeName = "BanruoUI[NZ]",
-  titleZhCN = "BanruoUI暗黑内置主题包",
+  titleZhCN = "BanruoUI【暗黑内置主题包】",
   titleEnUS = "BanruoUI [NZ]",
 
   author = "Banruo",

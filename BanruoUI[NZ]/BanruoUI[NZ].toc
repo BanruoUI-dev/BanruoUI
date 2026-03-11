@@ -1,6 +1,6 @@
 ## Interface: 120001,120000
 ## Title: BanruoUI[NZ]
-## Title-zhCN: BanruoUI暗黑内置主题包
+## Title-zhCN: BanruoUI【暗黑内置主题包】
 ## Title-enUS: BanruoUI [NZ]
 ## Notes: BanruoUI[NZ]
 ## Author: Banruo
