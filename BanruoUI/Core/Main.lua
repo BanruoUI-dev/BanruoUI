@@ -280,6 +280,25 @@ local function setRootNever(gn, never)
   return okRoot, okRoot and "ok" or "set_never_failed"
 end
 
+
+local function setRootNeverById(rootId, never)
+  if not (B.BRE_SetNeverById and B.BRE_RefreshLoads) then
+    return false, B:Loc("ERR_WA_ADAPTER_NOT_READY")
+  end
+  if type(rootId) ~= "string" or rootId == "" then
+    return false, "root_not_found"
+  end
+
+  local okRoot = B:BRE_SetNeverById(rootId, never)
+
+  if B.BRE_RebuildDisplays then
+    B:BRE_RebuildDisplays({rootId})
+  elseif B.BRE_RefreshLoads then
+    B:BRE_RefreshLoads()
+  end
+
+  return okRoot, okRoot and "ok" or "set_never_failed"
+end
 local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
   local newCfg = getBreCfg(newTheme)
   if not newTheme or not newCfg or not newCfg.main or newCfg.main == "" then
@@ -289,6 +308,7 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
   local oldCfg = getBreCfg(oldTheme)
   local newGN = newCfg.groupName
   local oldGN = oldCfg and oldCfg.groupName or nil
+  local importedRootId = nil
 
   if mode == "force" then
     -- 强制还原默认：删除式清理 + 重新导入
@@ -296,10 +316,12 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
       local okDel, msgDel = B:BRE_DeleteByKeyword(newGN)
       if not okDel then return false, msgDel end
     end
+
     local breStr = getBREString(newTheme)
     if not breStr then return false, B:Loc("ERR_WA_REG_MISSING") end
     local newRoot, msgImp = B:BRE_Import(breStr)
     if not newRoot then return false, msgImp end
+    importedRootId = newRoot
 
     ensureDB()
     BanruoUIDB.themeInit[newThemeId] = true
@@ -307,12 +329,14 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
     -- 切到新主题（隐藏旧/显示新）
     if type(oldGN) == "string" and oldGN ~= "" and oldGN ~= newGN then
       local okOld, msgOld = setRootNever(oldGN, true)
-
       if not okOld then return false, msgOld end
     end
-    if type(newGN) == "string" and newGN ~= "" then
-      local okNew, msgNew = setRootNever(newGN, false)
 
+    if importedRootId then
+      local okNew, msgNew = setRootNeverById(importedRootId, false)
+      if not okNew then return false, msgNew end
+    elseif type(newGN) == "string" and newGN ~= "" then
+      local okNew, msgNew = setRootNever(newGN, false)
       if not okNew then return false, msgNew end
     end
 
@@ -326,6 +350,7 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
     if not breStr then return false, B:Loc("ERR_WA_REG_MISSING") end
     local newRoot, msgImp = B:BRE_Import(breStr)
     if not newRoot then return false, msgImp end
+    importedRootId = newRoot
 
     ensureDB()
     BanruoUIDB.themeInit[newThemeId] = true
@@ -333,12 +358,14 @@ local function doBRESwitch(oldTheme, newTheme, newThemeId, mode)
 
   if type(oldGN) == "string" and oldGN ~= "" and oldGN ~= newGN then
     local okOld, msgOld = setRootNever(oldGN, true)
-
     if not okOld then return false, msgOld end
   end
-  if type(newGN) == "string" and newGN ~= "" then
-    local okNew, msgNew = setRootNever(newGN, false)
 
+  if importedRootId then
+    local okNew, msgNew = setRootNeverById(importedRootId, false)
+    if not okNew then return false, msgNew end
+  elseif type(newGN) == "string" and newGN ~= "" then
+    local okNew, msgNew = setRootNever(newGN, false)
     if not okNew then return false, msgNew end
   end
 
