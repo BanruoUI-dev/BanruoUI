@@ -123,7 +123,7 @@ end
 
 
 -- ------------------------------------------------------------
--- Flip Card runtime (v1): one-shot flip between front/back.
+-- Flip Card runtime (v1.1): staged simulated flip (fold + perspective + shade).
 -- Runtime animation does not write DB per frame.
 -- ------------------------------------------------------------
 M._flipping = M._flipping or nil -- [id] -> state
@@ -156,6 +156,147 @@ local function _flipSetTexture(frame, path)
   end
 end
 
+local function _flipClamp(v, lo, hi)
+  v = tonumber(v) or 0
+  if v < lo then return lo end
+  if v > hi then return hi end
+  return v
+end
+
+local function _flipEaseOutBack(t, s)
+  t = _flipClamp(t, 0, 1)
+  s = tonumber(s) or 1.15
+  local u = t - 1
+  return 1 + (s + 1) * u * u * u + s * u * u
+end
+
+local function _flipEnsureShade(frame)
+  if not frame then return nil end
+  if frame._flipShade then return frame._flipShade end
+  local shade = frame:CreateTexture(nil, "OVERLAY")
+  shade:SetAllPoints(frame)
+  shade:SetColorTexture(0, 0, 0, 0)
+  shade:Hide()
+  frame._flipShade = shade
+  return shade
+end
+
+local function _flipResetVisual(frame)
+  if not (frame and frame._tex) then return end
+  local tex = frame._tex
+  if tex.SetScale then tex:SetScale(1) end
+  if tex.SetTexCoord then
+    pcall(tex.SetTexCoord, tex, 0, 1, 0, 1)
+  end
+  local shade = frame._flipShade
+  if shade then
+    shade:SetAlpha(0)
+    shade:Hide()
+  end
+end
+
+local function _flipBuildTexCoord(axis, pivot, visible, perspective)
+  local vis = _flipClamp(visible, 0.02, 1)
+  local persp = _flipClamp(perspective, 0, 1)
+
+  if axis == "x" then
+    local half = 0.5 * vis
+    local t = 0.5 - half
+    local b = 0.5 + half
+    local skew = (1 - vis) * persp * 0.18
+    if pivot == "top" then
+      return {
+        ulx = 0, uly = t,
+        llx = skew, lly = b,
+        urx = 1, ury = t,
+        lrx = 1 - skew, lry = b,
+      }
+    elseif pivot == "bottom" then
+      return {
+        ulx = skew, uly = t,
+        llx = 0, lly = b,
+        urx = 1 - skew, ury = t,
+        lrx = 1, lry = b,
+      }
+    end
+    return {
+      ulx = skew * 0.5, uly = t,
+      llx = skew * 0.5, lly = b,
+      urx = 1 - skew * 0.5, ury = t,
+      lrx = 1 - skew * 0.5, lry = b,
+    }
+  end
+
+  local half = 0.5 * vis
+  local l = 0.5 - half
+  local r = 0.5 + half
+  local skew = (1 - vis) * persp * 0.18
+  if pivot == "left" then
+    return {
+      ulx = l, uly = skew,
+      llx = l, lly = 1 - skew,
+      urx = r, ury = 0,
+      lrx = r, lry = 1,
+    }
+  elseif pivot == "right" then
+    return {
+      ulx = l, uly = 0,
+      llx = l, lly = 1,
+      urx = r, ury = skew,
+      lrx = r, lry = 1 - skew,
+    }
+  end
+  return {
+    ulx = l, uly = skew * 0.5,
+    llx = l, lly = 1 - skew * 0.5,
+    urx = r, ury = skew * 0.5,
+    lrx = r, lry = 1 - skew * 0.5,
+  }
+end
+
+local function _flipApplyVisual(frame, st, visible)
+  if not (frame and frame._tex) then return end
+  local tex = frame._tex
+
+  local vis = _flipClamp(visible, 0.02, 1.1)
+  local axis = (st.axis == "x") and "x" or "y"
+  local pivot = tostring(st.pivot or "center")
+
+  if axis == "x" and pivot ~= "top" and pivot ~= "bottom" then
+    pivot = "center"
+  end
+  if axis == "y" and pivot ~= "left" and pivot ~= "right" then
+    pivot = "center"
+  end
+
+  local coord = _flipBuildTexCoord(axis, pivot, math.min(vis, 1), st.perspective or 0)
+  if tex.SetTexCoord and coord then
+    pcall(tex.SetTexCoord, tex,
+      coord.ulx, coord.uly,
+      coord.llx, coord.lly,
+      coord.urx, coord.ury,
+      coord.lrx, coord.lry)
+  end
+
+  local texScale = 1
+  if vis > 1 then
+    texScale = 1 + (vis - 1) * 0.4
+  end
+  if tex.SetScale then tex:SetScale(texScale) end
+
+  local shade = _flipEnsureShade(frame)
+  if shade then
+    local shadeAlpha = (1 - math.min(vis, 1)) * _flipClamp(st.shadow or 0, 0, 1)
+    if shadeAlpha > 0.005 then
+      shade:SetAlpha(shadeAlpha)
+      shade:Show()
+    else
+      shade:SetAlpha(0)
+      shade:Hide()
+    end
+  end
+end
+
 local function _ensureFlipDriver(self)
   if self._flipDriver then return end
   local d = CreateFrame("Frame", nil, UIParent)
@@ -170,18 +311,17 @@ local function _ensureFlipDriver(self)
     local now = GetTime and GetTime() or 0
     for id, st in pairs(M._flipping) do
       local f = M._regions and M._regions[id] or nil
-      if not (f and f._tex and f._tex.SetScale) then
+      if not (f and f._tex) then
         M._flipping[id] = nil
       else
         local startT = tonumber(st.startT) or now
-        local dur = tonumber(st.duration) or 0.35
-        if dur < 0.05 then dur = 0.05 end
+        local dur = _flipClamp(st.duration or 0.35, 0.05, 3)
         local p = (now - startT) / dur
         if p < 0 then p = 0 end
 
         if p >= 1 then
           _flipSetTexture(f, st.targetPath)
-          f._tex:SetScale(1)
+          _flipResetVisual(f)
 
           local data = GetData and GetData(id) or nil
           if type(data) == "table" then
@@ -192,14 +332,23 @@ local function _ensureFlipDriver(self)
           end
           M._flipping[id] = nil
         else
-          local scaleX = math.abs(math.cos(math.pi * p))
-          if scaleX < 0.02 then scaleX = 0.02 end
-          f._tex:SetScale(scaleX)
+          local vis
+          if p < 0.45 then
+            local q = p / 0.45
+            vis = 1 - (q * q * q)
+          elseif p < 0.55 then
+            vis = 0.02
+          else
+            local q = (p - 0.55) / 0.45
+            vis = _flipEaseOutBack(q, st.overshootAmp or 1.15)
+          end
 
           if (not st.swapped) and p >= 0.5 then
             st.swapped = true
             _flipSetTexture(f, st.targetPath)
           end
+
+          _flipApplyVisual(f, st, vis)
         end
       end
     end
@@ -216,16 +365,24 @@ local function _syncFlipRuntime(self, id, el, f)
   if type(id) ~= "string" or type(el) ~= "table" or not f or not f._tex then return end
   if el.regionType ~= "flipcard" then
     if self._flipping then self._flipping[id] = nil end
-    if f._tex.SetScale then f._tex:SetScale(1) end
+    _flipResetVisual(f)
     return
   end
 
   local flip = type(el.flip) == "table" and el.flip or {}
   local curFace = _flipFace(flip.currentFace)
   local isFlipping = flip.isFlipping and true or false
-  local dur = tonumber(flip.duration) or 0.35
-  if dur < 0.05 then dur = 0.05 end
-  if dur > 3 then dur = 3 end
+  local dur = _flipClamp(tonumber(flip.duration) or 0.35, 0.05, 3)
+
+  local axis = (flip.axis == "x") and "x" or "y"
+  local pivot = tostring(flip.pivot or "center")
+  if pivot ~= "left" and pivot ~= "right" and pivot ~= "top" and pivot ~= "bottom" then
+    pivot = "center"
+  end
+
+  local perspective = _flipClamp(tonumber(flip.perspective) or 0.45, 0, 1)
+  local shadow = _flipClamp(tonumber(flip.shadow) or 0.4, 0, 1)
+  local overshoot = _flipClamp(tonumber(flip.overshoot) or 0.08, 0, 0.2)
 
   local curPath = _flipPath(el, curFace)
   local targetFace = (curFace == "front") and "back" or "front"
@@ -234,7 +391,7 @@ local function _syncFlipRuntime(self, id, el, f)
   if not isFlipping then
     if self._flipping then self._flipping[id] = nil end
     _flipSetTexture(f, curPath)
-    if f._tex.SetScale then f._tex:SetScale(1) end
+    _flipResetVisual(f)
     return
   end
 
@@ -243,13 +400,18 @@ local function _syncFlipRuntime(self, id, el, f)
   if self._flipping[id] then return end
 
   _flipSetTexture(f, curPath)
-  if f._tex.SetScale then f._tex:SetScale(1) end
+  _flipResetVisual(f)
 
   self._flipping[id] = {
     startT = GetTime and GetTime() or 0,
     duration = dur,
     targetFace = targetFace,
     targetPath = targetPath,
+    axis = axis,
+    pivot = pivot,
+    perspective = perspective,
+    shadow = shadow,
+    overshootAmp = 1 + (overshoot * 8),
     swapped = false,
   }
 
@@ -1512,6 +1674,13 @@ function M:TriggerFlipOnce(id)
   data.flip.currentFace = _flipFace(data.flip.currentFace)
   data.flip.isFlipping = true
   if type(data.flip.duration) ~= "number" then data.flip.duration = 0.35 end
+  data.flip.axis = (data.flip.axis == "x") and "x" or "y"
+  local p = tostring(data.flip.pivot or "center")
+  if p ~= "left" and p ~= "right" and p ~= "top" and p ~= "bottom" then p = "center" end
+  data.flip.pivot = p
+  if type(data.flip.perspective) ~= "number" then data.flip.perspective = 0.45 end
+  if type(data.flip.shadow) ~= "number" then data.flip.shadow = 0.4 end
+  if type(data.flip.overshoot) ~= "number" then data.flip.overshoot = 0.08 end
 
   SetData(id, data)
   if self.Refresh then
@@ -2756,3 +2925,4 @@ function M:DuplicateSubtree(sourceId)
 
   return newRootId
 end
+

@@ -56,6 +56,18 @@ Bre.Locales.zhCN = {
   ELEM_FLIPCARD_STATUS = "状态",
   ELEM_FLIPCARD_STATUS_IDLE = "静止",
   ELEM_FLIPCARD_STATUS_FLIPPING = "翻牌中",
+  ELEM_FLIPCARD_AXIS = "翻转轴",
+  ELEM_FLIPCARD_AXIS_X = "X轴(上下翻)",
+  ELEM_FLIPCARD_AXIS_Y = "Y轴(左右翻)",
+  ELEM_FLIPCARD_PIVOT = "翻转枢轴",
+  ELEM_FLIPCARD_PIVOT_CENTER = "中心",
+  ELEM_FLIPCARD_PIVOT_LEFT = "左侧",
+  ELEM_FLIPCARD_PIVOT_RIGHT = "右侧",
+  ELEM_FLIPCARD_PIVOT_TOP = "顶部",
+  ELEM_FLIPCARD_PIVOT_BOTTOM = "底部",
+  ELEM_FLIPCARD_PERSPECTIVE = "透视",
+  ELEM_FLIPCARD_SHADOW = "阴影",
+  ELEM_FLIPCARD_OVERSHOOT = "回弹",
   MODEL_SEC_CORE = "核心参数",
   MODEL_TODO_NOTE = "（壳：暂未接入功能）",
   MODEL_MODE = "模式",
@@ -324,3 +336,4 @@ Bre.Locales.zhCN["MENU_EXPORT"] = "导出"
 -- BanruoUI_options panel
 Bre.Locales.zhCN["OPTIONS_PANEL_SUB"]  = "BreOptions v2.0.14  |  输入 /brs 打开编辑器"
 Bre.Locales.zhCN["OPTIONS_BTN_OPEN"]   = "打开 /brs"
+

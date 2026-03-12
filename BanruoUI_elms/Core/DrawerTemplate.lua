@@ -1964,17 +1964,17 @@ function DT:_WireFlipCardEvents(drawer, controls)
     if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
   end
 
-  local function _CommitDuration(control)
+  local function _CommitNumber(control, propKey, dft, minv, maxv)
     if not (control and control.GetText) then return end
     local id = _GetBoundNodeId(control)
     if not id then return end
     local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
     if not (PS and PS.Set) then return end
     local n = tonumber(control:GetText() or "")
-    if not n then n = 0.35 end
-    if n < 0.05 then n = 0.05 end
-    if n > 3 then n = 3 end
-    pcall(PS.Set, PS, id, "flip.duration", n)
+    if not n then n = dft end
+    if minv ~= nil and n < minv then n = minv end
+    if maxv ~= nil and n > maxv then n = maxv end
+    pcall(PS.Set, PS, id, propKey, n)
     if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
   end
 
@@ -1983,7 +1983,7 @@ function DT:_WireFlipCardEvents(drawer, controls)
       self:ClearFocus()
       _CommitPath(controls.frontPath, "flip.frontPath")
     end)
-    controls.frontPath._editbox:SetScript("OnEditFocusLost", function(self)
+    controls.frontPath._editbox:SetScript("OnEditFocusLost", function()
       _CommitPath(controls.frontPath, "flip.frontPath")
     end)
   end
@@ -1993,7 +1993,7 @@ function DT:_WireFlipCardEvents(drawer, controls)
       self:ClearFocus()
       _CommitPath(controls.backPath, "flip.backPath")
     end)
-    controls.backPath._editbox:SetScript("OnEditFocusLost", function(self)
+    controls.backPath._editbox:SetScript("OnEditFocusLost", function()
       _CommitPath(controls.backPath, "flip.backPath")
     end)
   end
@@ -2001,10 +2001,40 @@ function DT:_WireFlipCardEvents(drawer, controls)
   if controls.duration and controls.duration.SetScript then
     controls.duration:SetScript("OnEnterPressed", function(self)
       self:ClearFocus()
-      _CommitDuration(self)
+      _CommitNumber(self, "flip.duration", 0.35, 0.05, 3)
     end)
     controls.duration:SetScript("OnEditFocusLost", function(self)
-      _CommitDuration(self)
+      _CommitNumber(self, "flip.duration", 0.35, 0.05, 3)
+    end)
+  end
+
+  if controls.perspective and controls.perspective.SetScript then
+    controls.perspective:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitNumber(self, "flip.perspective", 0.45, 0, 1)
+    end)
+    controls.perspective:SetScript("OnEditFocusLost", function(self)
+      _CommitNumber(self, "flip.perspective", 0.45, 0, 1)
+    end)
+  end
+
+  if controls.shadow and controls.shadow.SetScript then
+    controls.shadow:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitNumber(self, "flip.shadow", 0.4, 0, 1)
+    end)
+    controls.shadow:SetScript("OnEditFocusLost", function(self)
+      _CommitNumber(self, "flip.shadow", 0.4, 0, 1)
+    end)
+  end
+
+  if controls.overshoot and controls.overshoot.SetScript then
+    controls.overshoot:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitNumber(self, "flip.overshoot", 0.08, 0, 0.2)
+    end)
+    controls.overshoot:SetScript("OnEditFocusLost", function(self)
+      _CommitNumber(self, "flip.overshoot", 0.08, 0, 0.2)
     end)
   end
 
@@ -2029,6 +2059,57 @@ function DT:_WireFlipCardEvents(drawer, controls)
       end
       _Add("front", "ELEM_FLIPCARD_FACE_FRONT")
       _Add("back", "ELEM_FLIPCARD_FACE_BACK")
+    end)
+  end
+
+  if controls.axis and UIDropDownMenu_Initialize then
+    UIDropDownMenu_Initialize(controls.axis, function(self, level)
+      if level ~= 1 then return end
+      local function _Add(value, textKey)
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = (Bre and Bre.L and Bre.L(textKey)) or value
+        info.value = value
+        info.func = function()
+          local id = _GetBoundNodeId(controls.axis)
+          if not id then return end
+          local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+          if not (PS and PS.Set) then return end
+          controls.axis.__value = value
+          UIDropDownMenu_SetText(controls.axis, info.text)
+          pcall(PS.Set, PS, id, "flip.axis", value)
+          if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+        end
+        UIDropDownMenu_AddButton(info, level)
+      end
+      _Add("y", "ELEM_FLIPCARD_AXIS_Y")
+      _Add("x", "ELEM_FLIPCARD_AXIS_X")
+    end)
+  end
+
+  if controls.pivot and UIDropDownMenu_Initialize then
+    UIDropDownMenu_Initialize(controls.pivot, function(self, level)
+      if level ~= 1 then return end
+      local function _Add(value, textKey)
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = (Bre and Bre.L and Bre.L(textKey)) or value
+        info.value = value
+        info.func = function()
+          local id = _GetBoundNodeId(controls.pivot)
+          if not id then return end
+          local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+          if not (PS and PS.Set) then return end
+          controls.pivot.__value = value
+          UIDropDownMenu_SetText(controls.pivot, info.text)
+          pcall(PS.Set, PS, id, "flip.pivot", value)
+          if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+        end
+        UIDropDownMenu_AddButton(info, level)
+      end
+      _Add("center", "ELEM_FLIPCARD_PIVOT_CENTER")
+      _Add("left", "ELEM_FLIPCARD_PIVOT_LEFT")
+      _Add("right", "ELEM_FLIPCARD_PIVOT_RIGHT")
+      _Add("top", "ELEM_FLIPCARD_PIVOT_TOP")
+      _Add("bottom", "ELEM_FLIPCARD_PIVOT_BOTTOM")
     end)
   end
 
@@ -3281,3 +3362,4 @@ end
 ]]
 
 return DT
+

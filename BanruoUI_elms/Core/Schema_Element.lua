@@ -133,6 +133,11 @@ function S:CreateElement(regionType, opts)
       currentFace = "front",
       isFlipping = false,
       duration = 0.35,
+      axis = "y",
+      pivot = "center",
+      perspective = 0.45,
+      shadow = 0.4,
+      overshoot = 0.08,
     }
   end
   -- optional module blocks (placeholders)
@@ -189,6 +194,13 @@ function S:NormalizeElement(e)
     if e.flip.currentFace ~= "back" then e.flip.currentFace = "front" end
     if e.flip.isFlipping == nil then e.flip.isFlipping = false end
     if e.flip.duration == nil then e.flip.duration = 0.35 end
+    if e.flip.axis ~= "x" and e.flip.axis ~= "y" then e.flip.axis = "y" end
+    if e.flip.pivot ~= "left" and e.flip.pivot ~= "right" and e.flip.pivot ~= "top" and e.flip.pivot ~= "bottom" then
+      e.flip.pivot = "center"
+    end
+    if type(e.flip.perspective) ~= "number" then e.flip.perspective = 0.45 end
+    if type(e.flip.shadow) ~= "number" then e.flip.shadow = 0.4 end
+    if type(e.flip.overshoot) ~= "number" then e.flip.overshoot = 0.08 end
   end
   e.conditions = ensureTable(e.conditions)
   e.customFunctions = ensureTable(e.customFunctions)
@@ -200,3 +212,4 @@ function S:NormalizeElement(e)
 
   return e
 end
+

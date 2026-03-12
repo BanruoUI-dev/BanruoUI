@@ -87,6 +87,34 @@ function PS:Normalize(propKey, value)
   if propKey == 'flip.isFlipping' then
     return value and true or false
   end
+
+  if propKey == 'flip.axis' then
+    local v = tostring(value or 'y')
+    if v ~= 'x' and v ~= 'y' then v = 'y' end
+    return v
+  end
+
+  if propKey == 'flip.pivot' then
+    local v = tostring(value or 'center')
+    if v ~= 'left' and v ~= 'right' and v ~= 'top' and v ~= 'bottom' and v ~= 'center' then v = 'center' end
+    return v
+  end
+
+  if propKey == 'flip.perspective' or propKey == 'flip.shadow' then
+    local v = tonumber(value)
+    if not v then return (propKey == 'flip.shadow') and 0.4 or 0.45 end
+    if v < 0 then v = 0 end
+    if v > 1 then v = 1 end
+    return v
+  end
+
+  if propKey == 'flip.overshoot' then
+    local v = tonumber(value)
+    if not v then return 0.08 end
+    if v < 0 then v = 0 end
+    if v > 0.2 then v = 0.2 end
+    return v
+  end
   if propKey == 'stopmotion.path' then
     local v = tostring(value or "")
     v = v:gsub("^%s+", ""):gsub("%s+$", "")
@@ -325,6 +353,40 @@ function PS:Get(nodeId, propKey)
   if propKey == 'flip.isFlipping' then
     return (type(data.flip) == 'table' and data.flip.isFlipping) and true or false
   end
+
+  if propKey == 'flip.axis' then
+    if type(data.flip) == 'table' and data.flip.axis == 'x' then return 'x' end
+    return 'y'
+  end
+
+  if propKey == 'flip.pivot' then
+    if type(data.flip) == 'table' then
+      local v = tostring(data.flip.pivot or 'center')
+      if v == 'left' or v == 'right' or v == 'top' or v == 'bottom' then return v end
+    end
+    return 'center'
+  end
+
+  if propKey == 'flip.perspective' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.perspective) or 0.45
+    end
+    return 0.45
+  end
+
+  if propKey == 'flip.shadow' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.shadow) or 0.4
+    end
+    return 0.4
+  end
+
+  if propKey == 'flip.overshoot' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.overshoot) or 0.08
+    end
+    return 0.08
+  end
   if propKey == 'stopmotion.path' then
     if type(data.stopmotion) == 'table' then
       return tostring(data.stopmotion.path or "")
@@ -478,7 +540,7 @@ function PS:Set(nodeId, propKey, value, opts)
     return true
   end
 
-  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' or propKey == 'flip.currentFace' or propKey == 'flip.duration' or propKey == 'flip.isFlipping' then
+  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' or propKey == 'flip.currentFace' or propKey == 'flip.duration' or propKey == 'flip.isFlipping' or propKey == 'flip.axis' or propKey == 'flip.pivot' or propKey == 'flip.perspective' or propKey == 'flip.shadow' or propKey == 'flip.overshoot' then
     data.flip = type(data.flip) == 'table' and data.flip or {}
     if propKey == 'flip.frontPath' then
       data.flip.frontPath = v or ""
@@ -491,6 +553,18 @@ function PS:Set(nodeId, propKey, value, opts)
       data.flip.duration = tonumber(v) or 0.35
     elseif propKey == 'flip.isFlipping' then
       data.flip.isFlipping = v and true or false
+    elseif propKey == 'flip.axis' then
+      data.flip.axis = (v == 'x') and 'x' or 'y'
+    elseif propKey == 'flip.pivot' then
+      local p = tostring(v or 'center')
+      if p ~= 'left' and p ~= 'right' and p ~= 'top' and p ~= 'bottom' then p = 'center' end
+      data.flip.pivot = p
+    elseif propKey == 'flip.perspective' then
+      data.flip.perspective = tonumber(v) or 0.45
+    elseif propKey == 'flip.shadow' then
+      data.flip.shadow = tonumber(v) or 0.4
+    elseif propKey == 'flip.overshoot' then
+      data.flip.overshoot = tonumber(v) or 0.08
     end
     _setData(nodeId, data)
 
@@ -934,3 +1008,4 @@ function PS:CommitFrameStrata(nodeId, frameStrata)
   frameStrata = frameStrata or "AUTO"
   return self:Set(nodeId, 'frameStrata', frameStrata) and true or false
 end
+

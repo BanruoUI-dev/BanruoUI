@@ -1578,6 +1578,13 @@ local function _createNode(regionType, id, parentId)
     node.flip.currentFace = (node.flip.currentFace == "back") and "back" or "front"
     node.flip.isFlipping = false
     node.flip.duration = tonumber(node.flip.duration) or 0.35
+    node.flip.axis = (node.flip.axis == "x") and "x" or "y"
+    local p = tostring(node.flip.pivot or "center")
+    if p ~= "left" and p ~= "right" and p ~= "top" and p ~= "bottom" then p = "center" end
+    node.flip.pivot = p
+    node.flip.perspective = tonumber(node.flip.perspective) or 0.45
+    node.flip.shadow = tonumber(node.flip.shadow) or 0.4
+    node.flip.overshoot = tonumber(node.flip.overshoot) or 0.08
   end
 
   return node
@@ -6744,3 +6751,4 @@ function UI:_SyncMoverBody()
     View:SyncSelection(f)
   end
 end
+

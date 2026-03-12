@@ -59,6 +59,18 @@ Bre.Locales.enUS = {
   ELEM_FLIPCARD_STATUS = "Status",
   ELEM_FLIPCARD_STATUS_IDLE = "Idle",
   ELEM_FLIPCARD_STATUS_FLIPPING = "Flipping",
+  ELEM_FLIPCARD_AXIS = "Axis",
+  ELEM_FLIPCARD_AXIS_X = "X (Top/Bottom)",
+  ELEM_FLIPCARD_AXIS_Y = "Y (Left/Right)",
+  ELEM_FLIPCARD_PIVOT = "Pivot",
+  ELEM_FLIPCARD_PIVOT_CENTER = "Center",
+  ELEM_FLIPCARD_PIVOT_LEFT = "Left",
+  ELEM_FLIPCARD_PIVOT_RIGHT = "Right",
+  ELEM_FLIPCARD_PIVOT_TOP = "Top",
+  ELEM_FLIPCARD_PIVOT_BOTTOM = "Bottom",
+  ELEM_FLIPCARD_PERSPECTIVE = "Perspective",
+  ELEM_FLIPCARD_SHADOW = "Shadow",
+  ELEM_FLIPCARD_OVERSHOOT = "Bounce",
   MODEL_SEC_CORE = "Core",
   MODEL_TODO_NOTE = "(Shell only; not wired yet)",
   MODEL_MODE = "Mode",
@@ -324,3 +336,4 @@ Bre.Locales.enUS["MENU_EXPORT"] = "Export"
 -- BanruoUI_options panel
 Bre.Locales.enUS["OPTIONS_PANEL_SUB"]  = "BreOptions v2.0.14  |  Type /brs to open the editor"
 Bre.Locales.enUS["OPTIONS_BTN_OPEN"]   = "Open /brs"
+
