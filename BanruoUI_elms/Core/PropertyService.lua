@@ -76,6 +76,12 @@ function PS:Normalize(propKey, value)
     return v
   end
 
+  if propKey == 'flip.style' then
+    local v = tostring(value or 'classic_90')
+    if v ~= 'cinematic' then v = 'classic_90' end
+    return v
+  end
+
   if propKey == 'flip.duration' then
     local v = tonumber(value)
     if not v then return 0.35 end
@@ -113,6 +119,26 @@ function PS:Normalize(propKey, value)
     if not v then return 0.08 end
     if v < 0 then v = 0 end
     if v > 0.2 then v = 0.2 end
+    return v
+  end
+
+  if propKey == 'flip.preShakeEnabled' then
+    return value and true or false
+  end
+
+  if propKey == 'flip.preShakeDuration' then
+    local v = tonumber(value)
+    if not v then return 0.12 end
+    if v < 0.05 then v = 0.05 end
+    if v > 0.5 then v = 0.5 end
+    return v
+  end
+
+  if propKey == 'flip.preShakeAmplitude' then
+    local v = tonumber(value)
+    if not v then return 8 end
+    if v < 0 then v = 0 end
+    if v > 64 then v = 64 end
     return v
   end
   if propKey == 'stopmotion.path' then
@@ -343,6 +369,11 @@ function PS:Get(nodeId, propKey)
     return 'front'
   end
 
+  if propKey == 'flip.style' then
+    if type(data.flip) == 'table' and data.flip.style == 'cinematic' then return 'cinematic' end
+    return 'classic_90'
+  end
+
   if propKey == 'flip.duration' then
     if type(data.flip) == 'table' then
       return tonumber(data.flip.duration) or 0.35
@@ -386,6 +417,24 @@ function PS:Get(nodeId, propKey)
       return tonumber(data.flip.overshoot) or 0.08
     end
     return 0.08
+  end
+
+  if propKey == 'flip.preShakeEnabled' then
+    return (type(data.flip) == 'table' and data.flip.preShakeEnabled) and true or false
+  end
+
+  if propKey == 'flip.preShakeDuration' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.preShakeDuration) or 0.12
+    end
+    return 0.12
+  end
+
+  if propKey == 'flip.preShakeAmplitude' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.preShakeAmplitude) or 8
+    end
+    return 8
   end
   if propKey == 'stopmotion.path' then
     if type(data.stopmotion) == 'table' then
@@ -540,7 +589,7 @@ function PS:Set(nodeId, propKey, value, opts)
     return true
   end
 
-  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' or propKey == 'flip.currentFace' or propKey == 'flip.duration' or propKey == 'flip.isFlipping' or propKey == 'flip.axis' or propKey == 'flip.pivot' or propKey == 'flip.perspective' or propKey == 'flip.shadow' or propKey == 'flip.overshoot' then
+  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' or propKey == 'flip.currentFace' or propKey == 'flip.style' or propKey == 'flip.duration' or propKey == 'flip.isFlipping' or propKey == 'flip.axis' or propKey == 'flip.pivot' or propKey == 'flip.perspective' or propKey == 'flip.shadow' or propKey == 'flip.overshoot' or propKey == 'flip.preShakeEnabled' or propKey == 'flip.preShakeDuration' or propKey == 'flip.preShakeAmplitude' then
     data.flip = type(data.flip) == 'table' and data.flip or {}
     if propKey == 'flip.frontPath' then
       data.flip.frontPath = v or ""
@@ -549,6 +598,8 @@ function PS:Set(nodeId, propKey, value, opts)
     elseif propKey == 'flip.currentFace' then
       data.flip.currentFace = (v == 'back') and 'back' or 'front'
       data.flip.isFlipping = false
+    elseif propKey == 'flip.style' then
+      data.flip.style = (v == 'cinematic') and 'cinematic' or 'classic_90'
     elseif propKey == 'flip.duration' then
       data.flip.duration = tonumber(v) or 0.35
     elseif propKey == 'flip.isFlipping' then
@@ -565,6 +616,12 @@ function PS:Set(nodeId, propKey, value, opts)
       data.flip.shadow = tonumber(v) or 0.4
     elseif propKey == 'flip.overshoot' then
       data.flip.overshoot = tonumber(v) or 0.08
+    elseif propKey == 'flip.preShakeEnabled' then
+      data.flip.preShakeEnabled = v and true or false
+    elseif propKey == 'flip.preShakeDuration' then
+      data.flip.preShakeDuration = tonumber(v) or 0.12
+    elseif propKey == 'flip.preShakeAmplitude' then
+      data.flip.preShakeAmplitude = tonumber(v) or 8
     end
     _setData(nodeId, data)
 

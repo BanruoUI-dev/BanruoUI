@@ -1978,6 +1978,17 @@ function DT:_WireFlipCardEvents(drawer, controls)
     if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
   end
 
+  local function _CommitBool(control, propKey)
+    if not control then return end
+    local id = _GetBoundNodeId(control)
+    if not id then return end
+    local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+    if not (PS and PS.Set) then return end
+    local checked = (control.GetChecked and control:GetChecked()) and true or false
+    pcall(PS.Set, PS, id, propKey, checked)
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
+
   if controls.frontPath and controls.frontPath._editbox and controls.frontPath._editbox.SetScript then
     controls.frontPath._editbox:SetScript("OnEnterPressed", function(self)
       self:ClearFocus()
@@ -2038,6 +2049,32 @@ function DT:_WireFlipCardEvents(drawer, controls)
     end)
   end
 
+  if controls.preShakeDuration and controls.preShakeDuration.SetScript then
+    controls.preShakeDuration:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitNumber(self, "flip.preShakeDuration", 0.12, 0.05, 0.5)
+    end)
+    controls.preShakeDuration:SetScript("OnEditFocusLost", function(self)
+      _CommitNumber(self, "flip.preShakeDuration", 0.12, 0.05, 0.5)
+    end)
+  end
+
+  if controls.preShakeAmplitude and controls.preShakeAmplitude.SetScript then
+    controls.preShakeAmplitude:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitNumber(self, "flip.preShakeAmplitude", 8, 0, 64)
+    end)
+    controls.preShakeAmplitude:SetScript("OnEditFocusLost", function(self)
+      _CommitNumber(self, "flip.preShakeAmplitude", 8, 0, 64)
+    end)
+  end
+
+  if controls.preShakeEnabled and controls.preShakeEnabled._checkbox and controls.preShakeEnabled._checkbox.SetScript then
+    controls.preShakeEnabled._checkbox:SetScript("OnClick", function()
+      _CommitBool(controls.preShakeEnabled, "flip.preShakeEnabled")
+    end)
+  end
+
   if controls.currentFace and UIDropDownMenu_Initialize then
     UIDropDownMenu_Initialize(controls.currentFace, function(self, level)
       if level ~= 1 then return end
@@ -2059,6 +2096,30 @@ function DT:_WireFlipCardEvents(drawer, controls)
       end
       _Add("front", "ELEM_FLIPCARD_FACE_FRONT")
       _Add("back", "ELEM_FLIPCARD_FACE_BACK")
+    end)
+  end
+
+  if controls.style and UIDropDownMenu_Initialize then
+    UIDropDownMenu_Initialize(controls.style, function(self, level)
+      if level ~= 1 then return end
+      local function _Add(value, textKey)
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = (Bre and Bre.L and Bre.L(textKey)) or value
+        info.value = value
+        info.func = function()
+          local id = _GetBoundNodeId(controls.style)
+          if not id then return end
+          local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+          if not (PS and PS.Set) then return end
+          controls.style.__value = value
+          UIDropDownMenu_SetText(controls.style, info.text)
+          pcall(PS.Set, PS, id, "flip.style", value)
+          if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+        end
+        UIDropDownMenu_AddButton(info, level)
+      end
+      _Add("classic_90", "ELEM_FLIPCARD_STYLE_CLASSIC_90")
+      _Add("cinematic", "ELEM_FLIPCARD_STYLE_CINEMATIC")
     end)
   end
 
@@ -3362,4 +3423,5 @@ end
 ]]
 
 return DT
+
 

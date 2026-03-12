@@ -131,6 +131,7 @@ function S:CreateElement(regionType, opts)
       frontPath = "",
       backPath = "",
       currentFace = "front",
+      style = "classic_90",
       isFlipping = false,
       duration = 0.35,
       axis = "y",
@@ -138,6 +139,9 @@ function S:CreateElement(regionType, opts)
       perspective = 0.45,
       shadow = 0.4,
       overshoot = 0.08,
+      preShakeEnabled = false,
+      preShakeDuration = 0.12,
+      preShakeAmplitude = 8,
     }
   end
   -- optional module blocks (placeholders)
@@ -192,6 +196,7 @@ function S:NormalizeElement(e)
     if e.flip.frontPath == nil then e.flip.frontPath = "" end
     if e.flip.backPath == nil then e.flip.backPath = "" end
     if e.flip.currentFace ~= "back" then e.flip.currentFace = "front" end
+    if e.flip.style ~= "cinematic" then e.flip.style = "classic_90" end
     if e.flip.isFlipping == nil then e.flip.isFlipping = false end
     if e.flip.duration == nil then e.flip.duration = 0.35 end
     if e.flip.axis ~= "x" and e.flip.axis ~= "y" then e.flip.axis = "y" end
@@ -201,6 +206,13 @@ function S:NormalizeElement(e)
     if type(e.flip.perspective) ~= "number" then e.flip.perspective = 0.45 end
     if type(e.flip.shadow) ~= "number" then e.flip.shadow = 0.4 end
     if type(e.flip.overshoot) ~= "number" then e.flip.overshoot = 0.08 end
+    if e.flip.preShakeEnabled == nil then e.flip.preShakeEnabled = false end
+    if type(e.flip.preShakeDuration) ~= "number" then e.flip.preShakeDuration = 0.12 end
+    if e.flip.preShakeDuration < 0.05 then e.flip.preShakeDuration = 0.05 end
+    if e.flip.preShakeDuration > 0.5 then e.flip.preShakeDuration = 0.5 end
+    if type(e.flip.preShakeAmplitude) ~= "number" then e.flip.preShakeAmplitude = 8 end
+    if e.flip.preShakeAmplitude < 0 then e.flip.preShakeAmplitude = 0 end
+    if e.flip.preShakeAmplitude > 64 then e.flip.preShakeAmplitude = 64 end
   end
   e.conditions = ensureTable(e.conditions)
   e.customFunctions = ensureTable(e.customFunctions)

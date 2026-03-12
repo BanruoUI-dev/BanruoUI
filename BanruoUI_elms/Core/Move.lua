@@ -392,6 +392,10 @@ local function _flipFace(v)
   return (v == "back") and "back" or "front"
 end
 
+local function _flipStyle(v)
+  return (v == "cinematic") and "cinematic" or "classic_90"
+end
+
 local function _flipPath(el, face)
   local flip = type(el.flip) == "table" and el.flip or nil
   if not flip then return "" end
@@ -531,20 +535,40 @@ local function _flipResetTex(tex, frame)
   end
 end
 
-local function _flipApplyAxisScale(tex, frame, axis, vis)
+local function _flipApplyAxisScale(tex, frame, axis, vis, pivot)
   if not (tex and frame) then return end
   local w, h = frame:GetSize()
   w = tonumber(w) or 64
   h = tonumber(h) or 64
   vis = _flipClamp(vis, 0.01, 1)
+  pivot = tostring(pivot or "center")
 
   if tex.ClearAllPoints then tex:ClearAllPoints() end
-  if tex.SetPoint then tex:SetPoint("CENTER", frame, "CENTER", 0, 0) end
 
   if axis == "x" then
-    if tex.SetSize then tex:SetSize(w, math.max(1, h * vis)) end
+    local sh = math.max(1, h * vis)
+    if tex.SetSize then tex:SetSize(w, sh) end
+    if tex.SetPoint then
+      if pivot == "top" then
+        tex:SetPoint("TOP", frame, "TOP", 0, 0)
+      elseif pivot == "bottom" then
+        tex:SetPoint("BOTTOM", frame, "BOTTOM", 0, 0)
+      else
+        tex:SetPoint("CENTER", frame, "CENTER", 0, 0)
+      end
+    end
   else
-    if tex.SetSize then tex:SetSize(math.max(1, w * vis), h) end
+    local sw = math.max(1, w * vis)
+    if tex.SetSize then tex:SetSize(sw, h) end
+    if tex.SetPoint then
+      if pivot == "left" then
+        tex:SetPoint("LEFT", frame, "LEFT", 0, 0)
+      elseif pivot == "right" then
+        tex:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+      else
+        tex:SetPoint("CENTER", frame, "CENTER", 0, 0)
+      end
+    end
   end
 end
 
@@ -811,13 +835,58 @@ local function _flipApplySpark(frame, st, p, vis)
   spark:SetAlpha(alpha)
   spark:Show()
 end
+
+local function _flipApplyPreShake(frame, st, p)
+  if not frame then return end
+  p = _flipClamp(p, 0, 1)
+
+  _flipSetFaceVisible(frame, st.sourceFace)
+  local active = _flipFaceTex(frame, st.sourceFace)
+  if not active then return end
+
+  _flipResetTex(active, frame)
+
+  local amp = _flipClamp(st.preShakeAmplitude or 8, 0, 64)
+  local cycles = 2.0
+  local decay = 1 - p
+  local wave = math.sin(p * math.pi * 2 * cycles)
+  local jitter = wave * decay * amp
+
+  local w, h = frame:GetSize()
+  w = tonumber(w) or 64
+  h = tonumber(h) or 64
+
+  local axis = (st.axis == "x") and "x" or "y"
+  local ox, oy = 0, 0
+  if axis == "y" then
+    ox = jitter
+  else
+    oy = jitter
+  end
+
+  local squeeze = 1 - (math.abs(wave) * decay * 0.06)
+  if squeeze < 0.85 then squeeze = 0.85 end
+
+  if active.ClearAllPoints then active:ClearAllPoints() end
+  if active.SetPoint then active:SetPoint("CENTER", frame, "CENTER", ox, oy) end
+  if active.SetSize then
+    if axis == "y" then
+      active:SetSize(math.max(1, w * squeeze), h)
+    else
+      active:SetSize(w, math.max(1, h * squeeze))
+    end
+  end
+end
 local function _flipApplyVisual(frame, st, visible, p)
   if not frame then return end
   local front, back = _flipEnsureLayers(frame)
 
   local vis = _flipClamp(visible, 0.01, 1)
+  local style = _flipStyle(st.style)
   local axis = (st.axis == "x") and "x" or "y"
   local pivot = tostring(st.pivot or "center")
+  local perspective = _flipClamp(st.perspective or 0, 0, 1)
+  local overshoot = _flipClamp(st.overshoot or 0, 0, 0.2)
 
   if axis == "x" and pivot ~= "top" and pivot ~= "bottom" then
     pivot = "center"
@@ -834,11 +903,26 @@ local function _flipApplyVisual(frame, st, visible, p)
 
   _flipResetTex(inactive, frame)
 
-  -- Zero-stretch mode: use axis scaling instead of texcoord warp.
-  if active and active.SetTexCoord then
-    pcall(active.SetTexCoord, active, 0, 1, 0, 1)
+  if style == "classic_90" then
+    _flipApplyAxisScale(active, frame, axis, vis, "center")
+    if active and active.SetTexCoord then
+      pcall(active.SetTexCoord, active, 0, 1, 0, 1)
+    end
+  else
+    local mid = 1 - math.abs((_flipClamp(p, 0, 1) - 0.5) / 0.5)
+    if mid < 0 then mid = 0 end
+    local fold = 1 + (overshoot * 2.8 * mid)
+
+    _flipApplyAxisScale(active, frame, axis, vis, pivot)
+    if active and active.SetTexCoord then
+      local tc = _flipBuildTexCoord(axis, pivot, vis, perspective, fold)
+      if tc then
+        pcall(active.SetTexCoord, active, tc.ulx, tc.uly, tc.llx, tc.lly, tc.urx, tc.ury, tc.lrx, tc.lry)
+      else
+        pcall(active.SetTexCoord, active, 0, 1, 0, 1)
+      end
+    end
   end
-  _flipApplyAxisScale(active, frame, axis, vis)
 
   local shade = frame._flipShade
   if shade then
@@ -876,8 +960,10 @@ local function _ensureFlipDriver(self)
       else
         local startT = tonumber(st.startT) or now
         local dur = _flipClamp(st.duration or 0.35, 0.05, 3)
-        local p = (now - startT) / dur
-        if p < 0 then p = 0 end
+        local preDur = (st.preShakeEnabled and _flipClamp(st.preShakeDuration or 0.12, 0.05, 0.5)) or 0
+        local elapsed = now - startT
+        if elapsed < 0 then elapsed = 0 end
+        local p = (elapsed - preDur) / dur
 
         if p >= 1 then
           _flipSetFaceVisible(f, st.targetFace)
@@ -895,14 +981,36 @@ local function _ensureFlipDriver(self)
           end
           M._flipping[id] = nil
         else
-          local vis = _flipCosVisible(p)
-          if (not st.swapped) and p >= 0.5 then
-            st.swapped = true
-          end
+          if preDur > 0 and elapsed < preDur then
+            st.swapped = false
+            local preP = _flipClamp(elapsed / preDur, 0, 1)
+            _flipResetVisual(f)
+            _flipApplyPreShake(f, st, preP)
+            local preFace = _flipFaceTex(f, st.sourceFace)
+            if preFace then _flipApplyMaterial(preFace, st.alpha, st.blendMode) end
+          else
+            if p < 0 then p = 0 end
+            local renderP = p
+            local style = _flipStyle(st.style)
+            if style ~= "classic_90" then
+              local over = _flipClamp(st.overshoot or 0, 0, 0.2)
+              if over > 0 then
+                local tail = _flipClamp((p - 0.62) / 0.38, 0, 1)
+                if tail > 0 then
+                  renderP = p + math.sin(tail * math.pi) * (1 - tail) * (over * 0.8)
+                end
+              end
+            end
 
-          _flipApplyVisual(f, st, vis, p)
-          local active = _flipFaceTex(f, st.swapped and st.targetFace or st.sourceFace)
-          if active then _flipApplyMaterial(active, st.alpha, st.blendMode) end
+            local vis = _flipCosVisible(renderP)
+            if (not st.swapped) and p >= 0.5 then
+              st.swapped = true
+            end
+
+            _flipApplyVisual(f, st, vis, renderP)
+            local active = _flipFaceTex(f, st.swapped and st.targetFace or st.sourceFace)
+            if active then _flipApplyMaterial(active, st.alpha, st.blendMode) end
+          end
         end
       end
     end
@@ -928,6 +1036,7 @@ local function _syncFlipRuntime(self, id, el, f)
   local isFlipping = flip.isFlipping and true or false
   local dur = _flipClamp(tonumber(flip.duration) or 0.35, 0.05, 3)
 
+  local style = _flipStyle(flip.style)
   local axis = (flip.axis == "x") and "x" or "y"
   local pivot = tostring(flip.pivot or "center")
   if pivot ~= "left" and pivot ~= "right" and pivot ~= "top" and pivot ~= "bottom" then
@@ -936,6 +1045,10 @@ local function _syncFlipRuntime(self, id, el, f)
 
   local perspective = _flipClamp(tonumber(flip.perspective) or 0.45, 0, 1)
   local shadow = _flipClamp(tonumber(flip.shadow) or 0.4, 0, 1)
+  local overshoot = _flipClamp(tonumber(flip.overshoot) or 0.08, 0, 0.2)
+  local preShakeEnabled = flip.preShakeEnabled and true or false
+  local preShakeDuration = _flipClamp(tonumber(flip.preShakeDuration) or 0.12, 0.05, 0.5)
+  local preShakeAmplitude = _flipClamp(tonumber(flip.preShakeAmplitude) or 8, 0, 64)
   local fxIntensity = _flipClamp(tonumber(flip.fxIntensity) or 0.58, 0, 1)
   local fxR = _flipClamp(tonumber(flip.fxR) or 0.62, 0, 1)
   local fxG = _flipClamp(tonumber(flip.fxG) or 0.35, 0, 1)
@@ -972,10 +1085,15 @@ local function _syncFlipRuntime(self, id, el, f)
     duration = dur,
     sourceFace = curFace,
     targetFace = targetFace,
+    style = style,
     axis = axis,
     pivot = pivot,
     perspective = perspective,
     shadow = shadow,
+    overshoot = overshoot,
+    preShakeEnabled = preShakeEnabled,
+    preShakeDuration = preShakeDuration,
+    preShakeAmplitude = preShakeAmplitude,
     fxIntensity = fxIntensity,
     fxR = fxR,
     fxG = fxG,
@@ -3518,7 +3636,4 @@ function M:DuplicateSubtree(sourceId)
 
   return newRootId
 end
-
-
-
 

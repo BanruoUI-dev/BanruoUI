@@ -1589,6 +1589,7 @@ local function _createNode(regionType, id, parentId)
     node.flip.frontPath = node.flip.frontPath or ""
     node.flip.backPath = node.flip.backPath or ""
     node.flip.currentFace = (node.flip.currentFace == "back") and "back" or "front"
+    node.flip.style = (node.flip.style == "cinematic") and "cinematic" or "classic_90"
     node.flip.isFlipping = false
     node.flip.duration = tonumber(node.flip.duration) or 0.35
     node.flip.axis = (node.flip.axis == "x") and "x" or "y"
