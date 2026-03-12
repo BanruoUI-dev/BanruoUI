@@ -921,6 +921,9 @@ end
   -- Build Actions pane UI (Output Actions drawer)
   self:BuildActionsPane(right._panes.Actions)
 
+  -- Build CustomFn pane UI (user script editor/runner)
+  self:BuildCustomFnPane(right._panes.CustomFn)
+
   -- New overlay panel (covers the whole right side incl. tabs)
   right._newOverlay = self:BuildNewOverlay(right)
 
@@ -3297,10 +3300,14 @@ if eg and eg.RunGuarded then
           cp._drawerConditions_new:Show()
           if DT and DT.Refresh then DT:Refresh(cp._drawerConditions_new, id) end
         end
+      elseif showKey == "CustomFn" then
+        if self._RefreshCustomFnPane then
+          self:_RefreshCustomFnPane(id)
+        end
       end
+
+
     end
-
-
     -- Update hint labels for each pane
     for _, p in pairs(right._panes or {}) do
       if p._hint then
@@ -6721,6 +6728,265 @@ end
 
 
 -- ------------------------------------------------------------
+local function _trimCF(s)
+  if type(s) ~= "string" then return "" end
+  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+function UI:_CustomFnSetStatus(p, msg, isErr)
+  if not (p and p._customFn and p._customFn.status) then return end
+  local fs = p._customFn.status
+  fs:SetText(tostring(msg or ""))
+  if isErr then
+    fs:SetTextColor(1, 0.35, 0.35)
+  else
+    fs:SetTextColor(0.9, 0.9, 0.9)
+  end
+end
+
+function UI:_CommitCustomFnPane()
+  local f = self.frame
+  local right = f and f._body and f._body._inner and f._body._inner._right
+  local p = right and right._panes and right._panes.CustomFn
+  local cf = p and p._customFn
+  if not (cf and cf.code) then return end
+
+  local id = f and f._selectedId
+  if type(id) ~= "string" or id == "" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+    return
+  end
+
+  local data = (API and API.GetData and API:GetData(id)) or (GetData and GetData(id)) or nil
+  if type(data) ~= "table" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+    return
+  end
+
+  data.customFunctions = type(data.customFunctions) == "table" and data.customFunctions or {}
+  local slot = type(data.customFunctions.main) == "table" and data.customFunctions.main or {}
+  slot.name = "main"
+  slot.code = tostring(cf.code:GetText() or "")
+  slot.enabled = true
+  if type(time) == "function" then
+    slot.updatedAt = time()
+  end
+  data.customFunctions.main = slot
+
+  if API and API.SetData then
+    API:SetData(id, data)
+  elseif Bre and Bre.SetData then
+    Bre.SetData(id, data)
+  else
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_SAVE_FAIL"), true)
+    return
+  end
+
+  self:_CustomFnSetStatus(p, L("CUSTOMFN_SAVE_OK"), false)
+  self:RefreshRight()
+end
+
+function UI:_RunCustomFnPane()
+  local f = self.frame
+  local right = f and f._body and f._body._inner and f._body._inner._right
+  local p = right and right._panes and right._panes.CustomFn
+  local cf = p and p._customFn
+  if not (cf and cf.code) then return end
+
+  local id = f and f._selectedId
+  if type(id) ~= "string" or id == "" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+    return
+  end
+
+  local data = (API and API.GetData and API:GetData(id)) or (GetData and GetData(id)) or nil
+  if type(data) ~= "table" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+    return
+  end
+
+  local src = tostring(cf.code:GetText() or "")
+  if _trimCF(src) == "" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_EMPTY"), true)
+    return
+  end
+
+  local loader = loadstring or load
+  if type(loader) ~= "function" then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_FAIL") .. ": no loader", true)
+    return
+  end
+
+  local fn, err = loader(src, "BreCustomFn:" .. tostring(id))
+  if not fn then
+    self:_CustomFnSetStatus(p, (L("CUSTOMFN_COMPILE_FAIL") .. ": " .. tostring(err)), true)
+    return
+  end
+
+  local env = setmetatable({
+    Bre = Bre,
+    UI = self,
+    Gate = Gate,
+    nodeId = id,
+    print = print,
+  }, { __index = _G })
+
+  if setfenv then
+    pcall(setfenv, fn, env)
+  end
+
+  local ok, ret = pcall(fn, {
+    nodeId = id,
+    data = data,
+    Bre = Bre,
+    UI = self,
+    Gate = Gate,
+    API = API,
+  })
+
+  if not ok then
+    self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. tostring(ret)), true)
+    return
+  end
+
+  self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_OK") .. (ret ~= nil and (": " .. tostring(ret)) or "")), false)
+  self:RefreshRight()
+end
+
+function UI:_RefreshCustomFnPane(nodeId)
+  local f = self.frame
+  local right = f and f._body and f._body._inner and f._body._inner._right
+  local p = right and right._panes and right._panes.CustomFn
+  local cf = p and p._customFn
+  if not cf then return end
+
+  local hasSel = type(nodeId) == "string" and nodeId ~= ""
+  local data = hasSel and ((API and API.GetData and API:GetData(nodeId)) or (GetData and GetData(nodeId)) or nil) or nil
+  local slot = (type(data) == "table" and type(data.customFunctions) == "table" and type(data.customFunctions.main) == "table") and data.customFunctions.main or nil
+  local code = (slot and type(slot.code) == "string" and slot.code) or ""
+
+  cf._suppress = true
+  cf.code:SetText(code)
+  if cf.syncHeight then cf.syncHeight() end
+  cf._suppress = false
+
+  cf.code:SetEnabled(hasSel)
+  cf.btnSave:SetEnabled(hasSel)
+  cf.btnRun:SetEnabled(hasSel)
+
+  if not hasSel then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+  elseif not slot then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_HINT"), false)
+  end
+end
+function UI:BuildCustomFnPane(p)
+  if not p then return end
+
+  if p._defaultHeader then p._defaultHeader:Hide() end
+  if p._defaultHint then p._defaultHint:Hide() end
+
+  local title = p:CreateFontString(nil, "OVERLAY", (Bre.Font and Bre.Font:Large() or "GameFontNormalLarge"))
+  title:SetPoint("TOPLEFT", 18, -12)
+  title:SetTextColor(1, 0.82, 0.05)
+  title:SetText(L("TAB_CUSTOM"))
+
+  local codeLbl = p:CreateFontString(nil, "OVERLAY", (Bre.Font and Bre.Font:Normal() or "GameFontNormal"))
+  codeLbl:SetPoint("TOPLEFT", 18, -46)
+  codeLbl:SetTextColor(1, 0.82, 0.05)
+  codeLbl:SetText(L("CUSTOMFN_CODE"))
+
+  local scroll = CreateFrame("ScrollFrame", nil, p, "UIPanelScrollFrameTemplate")
+  scroll:SetPoint("TOPLEFT", 18, -66)
+  scroll:SetPoint("RIGHT", -29, 0)
+  scroll:SetHeight(282)
+
+  local codeFrame = CreateFrame("Frame", nil, p, "BackdropTemplate")
+  codeFrame:SetPoint("TOPLEFT", scroll, "TOPLEFT", -3, 2)
+  codeFrame:SetPoint("BOTTOMRIGHT", scroll, "BOTTOMRIGHT", 3, -2)
+  if codeFrame.SetBackdrop then
+    codeFrame:SetBackdrop({
+      bgFile = "Interface\\Buttons\\WHITE8x8",
+      edgeFile = "Interface\\Buttons\\WHITE8x8",
+      edgeSize = 1,
+    })
+    codeFrame:SetBackdropColor(0, 0, 0, 0.30)
+    codeFrame:SetBackdropBorderColor(1, 0.82, 0.05, 0.45)
+  end
+
+  local topLevel = (p.GetFrameLevel and p:GetFrameLevel()) or 1
+  codeFrame:SetFrameLevel(topLevel + 3)
+  scroll:SetFrameLevel(topLevel + 4)
+
+  local code = CreateFrame("EditBox", nil, scroll)
+  code:SetMultiLine(true)
+  code:SetAutoFocus(false)
+  code:EnableMouse(true)
+  code:SetTextColor(1, 1, 1, 1)
+  code:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+  code:SetFontObject("ChatFontNormal")
+  code:SetTextInsets(6, 6, 6, 6)
+  code:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+  code:SetScript("OnCursorChanged", function(self, _, y)
+    if scroll and scroll.SetVerticalScroll then
+      local h = self:GetHeight() or 1
+      local sh = scroll:GetHeight() or 1
+      if h > sh then
+        local max = h - sh
+        if y < scroll:GetVerticalScroll() then
+          scroll:SetVerticalScroll(y)
+        elseif y > (scroll:GetVerticalScroll() + sh - 24) then
+          scroll:SetVerticalScroll(math.min(max, y - sh + 24))
+        end
+      end
+    end
+  end)
+  scroll:SetScrollChild(code)
+
+  local function syncCodeHeight()
+    local lines = code:GetNumLines() or 1
+    local h = math.max(282, lines * 14 + 24)
+    local w = (scroll:GetWidth() or 300) - 8
+    if w < 120 then w = 120 end
+    code:SetWidth(w)
+    code:SetHeight(h)
+  end
+  code:SetScript("OnTextChanged", function() syncCodeHeight() end)
+  scroll:SetScript("OnSizeChanged", function() syncCodeHeight() end)
+
+  local btnSave = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+  btnSave:SetSize(120, 22)
+  btnSave:SetPoint("TOPLEFT", scroll, "BOTTOMLEFT", 0, -10)
+  btnSave:SetText(L("CUSTOMFN_SAVE"))
+
+  local btnRun = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+  btnRun:SetSize(120, 22)
+  btnRun:SetPoint("LEFT", btnSave, "RIGHT", 10, 0)
+  btnRun:SetText(L("CUSTOMFN_RUN"))
+
+  local status = p:CreateFontString(nil, "OVERLAY", (Bre.Font and Bre.Font:HighlightSmall() or "GameFontHighlightSmall"))
+  status:SetPoint("LEFT", btnRun, "RIGHT", 12, 0)
+  status:SetPoint("RIGHT", -22, 0)
+  status:SetJustifyH("LEFT")
+  status:SetTextColor(0.9, 0.9, 0.9)
+  status:SetText(L("CUSTOMFN_HINT"))
+
+  p._customFn = {
+    title = title,
+    code = code,
+    scroll = scroll,
+    btnSave = btnSave,
+    btnRun = btnRun,
+    status = status,
+    syncHeight = syncCodeHeight,
+    _suppress = false,
+  }
+
+  btnSave:SetScript("OnClick", function() UI:_CommitCustomFnPane() end)
+  btnRun:SetScript("OnClick", function() UI:_RunCustomFnPane() end)
+
+  syncCodeHeight()
+end
 -- Public
 -- ------------------------------------------------------------
 function UI:Toggle()

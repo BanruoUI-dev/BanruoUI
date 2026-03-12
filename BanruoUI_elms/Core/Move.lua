@@ -208,6 +208,34 @@ local function _flipEnsureLayers(frame)
     frame._flipGloss = gloss
   end
 
+  if not frame._flipSpark then
+    local spark = frame:CreateTexture(nil, "OVERLAY")
+    spark:SetTexture("Interface\\Cooldown\\star4")
+    spark:SetBlendMode("ADD")
+    spark:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    spark:SetSize(12, 12)
+    spark:SetAlpha(0)
+    spark:Hide()
+    frame._flipSpark = spark
+  end
+
+  if not frame._flipEdge then
+    local function mkEdge()
+      local t = frame:CreateTexture(nil, "OVERLAY")
+      t:SetColorTexture(1, 1, 1, 1)
+      t:SetBlendMode("ADD")
+      t:SetAlpha(0)
+      t:Hide()
+      return t
+    end
+    frame._flipEdge = {
+      l = mkEdge(),
+      r = mkEdge(),
+      t = mkEdge(),
+      b = mkEdge(),
+    }
+  end
+
   return frame._flipFrontTex, frame._flipBackTex
 end
 
@@ -291,14 +319,35 @@ local function _flipResetVisual(frame)
     gloss:SetAlpha(0)
     gloss:Hide()
   end
+
+  local spark = frame._flipSpark
+  if spark then
+    spark:SetAlpha(0)
+    spark:Hide()
+  end
+
+  local edge = frame._flipEdge
+  if edge then
+    if edge.l then edge.l:SetAlpha(0); edge.l:Hide() end
+    if edge.r then edge.r:SetAlpha(0); edge.r:Hide() end
+    if edge.t then edge.t:SetAlpha(0); edge.t:Hide() end
+    if edge.b then edge.b:SetAlpha(0); edge.b:Hide() end
+  end
 end
 
 local function _flipTeardown(frame)
   if not frame then return end
-  if not (frame._flipFrontTex or frame._flipBackTex or frame._flipShade or frame._flipGloss) then return end
+  if not (frame._flipFrontTex or frame._flipBackTex or frame._flipShade or frame._flipGloss or frame._flipSpark or frame._flipEdge) then return end
   _flipResetVisual(frame)
   if frame._flipBackTex then frame._flipBackTex:Hide() end
   if frame._flipGloss then frame._flipGloss:Hide() end
+  if frame._flipSpark then frame._flipSpark:Hide() end
+  if frame._flipEdge then
+    if frame._flipEdge.l then frame._flipEdge.l:Hide() end
+    if frame._flipEdge.r then frame._flipEdge.r:Hide() end
+    if frame._flipEdge.t then frame._flipEdge.t:Hide() end
+    if frame._flipEdge.b then frame._flipEdge.b:Hide() end
+  end
   if frame._flipShade then frame._flipShade:Hide() end
   if frame._flipFrontTex and frame._flipFrontTex.Show then frame._flipFrontTex:Show() end
   frame._flipVisibleFace = "front"
@@ -404,6 +453,104 @@ local function _flipApplyGloss(frame, st, p, vis)
   gloss:Show()
 end
 
+local function _flipApplyEdgeGlow(frame, st, p, vis)
+  local edge = frame and frame._flipEdge
+  if not edge then return end
+
+  local peak = 1 - math.abs((p - 0.5) / 0.5)
+  if peak < 0 then peak = 0 end
+  local fx = _flipClamp(st.fxIntensity or 0.55, 0, 1)
+  local alpha = (peak * peak) * (0.12 + fx * 0.56)
+
+  local r = _flipClamp(st.fxR or 0.62, 0, 1)
+  local g = _flipClamp(st.fxG or 0.35, 0, 1)
+  local b = _flipClamp(st.fxB or 1.00, 0, 1)
+
+  local w, h = frame:GetSize()
+  w = tonumber(w) or 64
+  h = tonumber(h) or 64
+  local t = math.max(1, math.floor(1 + fx * 3 + (1 - vis) * 2))
+
+  local function paint(tex, a)
+    if not tex then return end
+    tex:SetColorTexture(r, g, b, 1)
+    tex:SetAlpha(a)
+    if a > 0.01 then tex:Show() else tex:Hide() end
+  end
+
+  if edge.l then
+    edge.l:ClearAllPoints()
+    edge.l:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    edge.l:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+    edge.l:SetWidth(t)
+    paint(edge.l, alpha)
+  end
+  if edge.r then
+    edge.r:ClearAllPoints()
+    edge.r:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    edge.r:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    edge.r:SetWidth(t)
+    paint(edge.r, alpha)
+  end
+  if edge.t then
+    edge.t:ClearAllPoints()
+    edge.t:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    edge.t:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    edge.t:SetHeight(t)
+    paint(edge.t, alpha * 0.85)
+  end
+  if edge.b then
+    edge.b:ClearAllPoints()
+    edge.b:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+    edge.b:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    edge.b:SetHeight(t)
+    paint(edge.b, alpha * 0.85)
+  end
+end
+
+local function _flipApplySpark(frame, st, p, vis)
+  local spark = frame and frame._flipSpark
+  if not spark then return end
+
+  local peak = 1 - math.abs((p - 0.5) / 0.5)
+  if peak < 0 then peak = 0 end
+  local fx = _flipClamp(st.fxIntensity or 0.55, 0, 1)
+  local alpha = (peak * peak) * (0.08 + fx * 0.72)
+
+  if alpha < 0.01 then
+    spark:SetAlpha(0)
+    spark:Hide()
+    return
+  end
+
+  local r = _flipClamp(st.fxR or 0.62, 0, 1)
+  local g = _flipClamp(st.fxG or 0.35, 0, 1)
+  local b = _flipClamp(st.fxB or 1.00, 0, 1)
+
+  local axis = (st.axis == "x") and "x" or "y"
+  local sweep = ((p * 2) - 1) * ((st.swapped and 1) or -1)
+
+  local w, h = frame:GetSize()
+  w = tonumber(w) or 64
+  h = tonumber(h) or 64
+  local offsetX, offsetY = 0, 0
+  if axis == "y" then
+    offsetX = sweep * w * 0.28
+  else
+    offsetY = sweep * h * 0.28
+  end
+
+  local sz = math.max(10, math.min(w, h) * (0.18 + fx * 0.18 + peak * 0.22))
+  spark:ClearAllPoints()
+  spark:SetPoint("CENTER", frame, "CENTER", offsetX, offsetY)
+  spark:SetSize(sz, sz)
+  spark:SetVertexColor(r, g, b)
+  if spark.SetRotation then
+    spark:SetRotation((p * math.pi * 2) * ((axis == "y") and 1 or -1))
+  end
+  spark:SetAlpha(alpha)
+  spark:Show()
+end
 local function _flipApplyVisual(frame, st, visible, p)
   if not frame then return end
   local front, back = _flipEnsureLayers(frame)
@@ -446,6 +593,8 @@ local function _flipApplyVisual(frame, st, visible, p)
     end
   end
 
+  _flipApplyEdgeGlow(frame, st, p, vis)
+  _flipApplySpark(frame, st, p, vis)
   _flipApplyGloss(frame, st, p, vis)
 end
 local function _ensureFlipDriver(self)
@@ -527,6 +676,10 @@ local function _syncFlipRuntime(self, id, el, f)
 
   local perspective = _flipClamp(tonumber(flip.perspective) or 0.45, 0, 1)
   local shadow = _flipClamp(tonumber(flip.shadow) or 0.4, 0, 1)
+  local fxIntensity = _flipClamp(tonumber(flip.fxIntensity) or 0.58, 0, 1)
+  local fxR = _flipClamp(tonumber(flip.fxR) or 0.62, 0, 1)
+  local fxG = _flipClamp(tonumber(flip.fxG) or 0.35, 0, 1)
+  local fxB = _flipClamp(tonumber(flip.fxB) or 1.00, 0, 1)
   local frontPath = _flipPath(el, "front")
   local backPath = _flipPath(el, "back")
   local targetFace = (curFace == "front") and "back" or "front"
@@ -563,7 +716,11 @@ local function _syncFlipRuntime(self, id, el, f)
     pivot = pivot,
     perspective = perspective,
     shadow = shadow,
-    glossAlpha = _flipClamp(0.12 + perspective * 0.28, 0.06, 0.42),
+    fxIntensity = fxIntensity,
+    fxR = fxR,
+    fxG = fxG,
+    fxB = fxB,
+    glossAlpha = _flipClamp(0.16 + perspective * 0.30 + fxIntensity * 0.10, 0.08, 0.55),
     blendMode = blendMode,
     alpha = alpha,
     swapped = false,
@@ -1835,7 +1992,10 @@ function M:TriggerFlipOnce(id)
   if type(data.flip.perspective) ~= "number" then data.flip.perspective = 0.45 end
   if type(data.flip.shadow) ~= "number" then data.flip.shadow = 0.4 end
   if type(data.flip.overshoot) ~= "number" then data.flip.overshoot = 0.08 end
-
+  if type(data.flip.fxIntensity) ~= "number" then data.flip.fxIntensity = 0.58 end
+  if type(data.flip.fxR) ~= "number" then data.flip.fxR = 0.62 end
+  if type(data.flip.fxG) ~= "number" then data.flip.fxG = 0.35 end
+  if type(data.flip.fxB) ~= "number" then data.flip.fxB = 1.00 end
   SetData(id, data)
   if self.Refresh then
     pcall(function() self:Refresh(id) end)

@@ -148,6 +148,19 @@ NEW_BTN_PET = "3D Pet",
   TAB_BLANK = "Blank",
   TAB_PROP_POS = "Properties / Position",
 
+  CUSTOMFN_NAME = "Function Name",
+  CUSTOMFN_CODE = "Function Code",
+  CUSTOMFN_SAVE = "Save",
+  CUSTOMFN_RUN = "Run",
+  CUSTOMFN_HINT = "Write Lua code and click Run or Save.",
+  CUSTOMFN_NOSEL = "Please select an element first.",
+  CUSTOMFN_EMPTY = "Function code is empty.",
+  CUSTOMFN_SAVE_OK = "Function saved.",
+  CUSTOMFN_SAVE_FAIL = "Save failed.",
+  CUSTOMFN_RUN_OK = "Function executed.",
+  CUSTOMFN_RUN_FAIL = "Runtime error",
+  CUSTOMFN_COMPILE_FAIL = "Compile error",
+
   -- Conditions drawer
   COND_PLACEHOLDER = "(Placeholder: Condition groups/items and edit controls will be added later)",
 
