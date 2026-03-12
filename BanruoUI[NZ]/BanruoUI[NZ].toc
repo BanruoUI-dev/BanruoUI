@@ -3,7 +3,7 @@
 ## Title-zhCN: BanruoUI銆愭殫榛戝唴缃富棰樺寘銆?## Title-enUS: BanruoUI [NZ]
 ## Notes: BanruoUI[NZ]
 ## Author: Banruo
-## Version: v2.0.26
+## Version: v2.0.27
 ## RequiredDeps: BanruoUI
 ## IconTexture: Interface\AddOns\BanruoUI\Media\Logo\Logo64X64.tga
 ## Category-enUS: UI Overhaul
