@@ -29,6 +29,150 @@ Bre.Move = Bre.Move or {}
 
 local M = Bre.Move
 
+local function _cfTrim(s)
+  if type(s) ~= "string" then return "" end
+  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local function _cfDeepCopy(v, seen)
+  if type(v) ~= "table" then return v end
+  seen = seen or {}
+  if seen[v] then return seen[v] end
+  local t = {}
+  seen[v] = t
+  for k, val in pairs(v) do
+    t[_cfDeepCopy(k, seen)] = _cfDeepCopy(val, seen)
+  end
+  return t
+end
+
+local function _cfMerge(dst, patch)
+  if type(dst) ~= "table" or type(patch) ~= "table" then return dst end
+  for k, v in pairs(patch) do
+    if type(v) == "table" then
+      if type(dst[k]) ~= "table" then dst[k] = {} end
+      _cfMerge(dst[k], v)
+    else
+      dst[k] = v
+    end
+  end
+  return dst
+end
+
+local function _cfDiff(baseV, curV)
+  if type(curV) ~= "table" then
+    if baseV ~= curV then return curV end
+    return nil
+  end
+  local out = {}
+  local changed = false
+  for k, v in pairs(curV) do
+    local bv = (type(baseV) == "table") and baseV[k] or nil
+    if type(v) == "table" then
+      local d = _cfDiff(bv, v)
+      if d ~= nil then
+        out[k] = d
+        changed = true
+      end
+    else
+      if bv ~= v then
+        out[k] = v
+        changed = true
+      end
+    end
+  end
+  if changed then return out end
+  return nil
+end
+local function _cfCompile(src, chunkName)
+  local loader = loadstring or load
+  if type(loader) ~= "function" then return nil, "no loader" end
+  local fn, err = loader(src, chunkName)
+  if not fn then return nil, tostring(err or "compile failed") end
+  return fn, nil
+end
+
+local function _cfSafeEnv(id)
+  local env = {
+    nodeId = id,
+    math = math, string = string, table = table,
+    tonumber = tonumber, tostring = tostring, type = type,
+    pairs = pairs, ipairs = ipairs, next = next, select = select,
+    pcall = pcall, xpcall = xpcall, assert = assert, print = print,
+  }
+  if unpack then env.unpack = unpack end
+  if _G and _G.unpack and not env.unpack then env.unpack = _G.unpack end
+  return env
+end
+
+function M:BuildEffectiveElementFromCustomFn(id, baseEl, sourceCode)
+  if type(id) ~= "string" or type(baseEl) ~= "table" then return baseEl, nil, nil end
+  local src = sourceCode
+  if type(src) ~= "string" then
+    local cf = (type(baseEl.customFunctions) == "table" and type(baseEl.customFunctions.main) == "table") and baseEl.customFunctions.main or nil
+    if not cf or cf.enabled == false then
+      return _cfDeepCopy(baseEl), nil, nil
+    end
+    src = cf.code or ""
+  end
+  src = tostring(src or "")
+  if _cfTrim(src) == "" then
+    return _cfDeepCopy(baseEl), nil, nil
+  end
+
+  local fn, cErr = _cfCompile(src, "BreCustomFnPatch:" .. tostring(id))
+  if not fn then return _cfDeepCopy(baseEl), cErr, nil end
+
+  local baseCopy = _cfDeepCopy(baseEl)
+  local dataCopy = _cfDeepCopy(baseEl)
+  local ctx = {
+    nodeId = id,
+    base = baseCopy,
+    data = dataCopy,
+    patch = {},
+  }
+
+  local env = _cfSafeEnv(id)
+  env.ctx = ctx
+  if setfenv then pcall(setfenv, fn, env) end
+
+  local ok, ret = pcall(fn, ctx)
+  if not ok then
+    return _cfDeepCopy(baseEl), tostring(ret or "runtime error"), nil
+  end
+  if ret == false then
+    return _cfDeepCopy(baseEl), "AND_FALSE", nil
+  end
+
+  local patch = nil
+  if type(ret) == "table" then
+    patch = ret
+  elseif type(ctx.patch) == "table" and next(ctx.patch) ~= nil then
+    patch = ctx.patch
+  else
+    local derived = _cfDiff(baseCopy, dataCopy)
+    if type(derived) == "table" and next(derived) ~= nil then
+      patch = derived
+    end
+  end
+
+  local effective = _cfDeepCopy(baseEl)
+  if type(patch) == "table" then
+    _cfMerge(effective, patch)
+  end
+  return effective, nil, patch
+end
+
+function M:PreviewCustomFunction(id, src)
+  if type(id) ~= "string" or id == "" then return false, "no selected element" end
+  local base = GetData and GetData(id) or nil
+  if type(base) ~= "table" then return false, "element not found" end
+  local effective, err, patch = self:BuildEffectiveElementFromCustomFn(id, base, src)
+  if not effective then return false, tostring(err or "preview failed") end
+  self:ApplyElement(id, effective, { _skipCustomFn = true })
+  return true, patch
+end
+
 -- ------------------------------------------------------------
 -- Output Actions: Rotate (runtime continuous) - minimal always-rotate driver
 -- NOTE: This is runtime-only visual update. No DB writes. No commits.
@@ -121,7 +265,51 @@ local function _syncRotateRuntime(self, id, el)
   if self._rotateDriver then self._rotateDriver:Show() end
 end
 
+function M:StopRotateRuntime(id)
+  if type(id) ~= "string" or id == "" then return end
+  if self._rotating and self._rotating[id] then
+    self._rotating[id] = nil
+    if self._rotating and (not next(self._rotating)) then
+      self._rotating = nil
+      if self._rotateDriver then self._rotateDriver:Hide() end
+    end
+  end
+  local f = self._regions and self._regions[id] or nil
+  local tex = _getRotateTex(f)
+  if tex and tex.SetRotation then
+    tex:SetRotation(0)
+  end
+end
 
+-- CustomFn cleared hook: runtime-only cleanup + rebuild.
+-- UI should call this single semantic API instead of orchestrating runtime details.
+function M:OnCustomFnCleared(id)
+  if type(id) ~= "string" or id == "" then return false end
+  -- One-time legacy cleanup:
+  -- Older CustomFn flows may have persisted rotate.enabled=true into base data.
+  -- In strict WA-like mode, clearing function should remove that legacy residue.
+  local data = GetData and GetData(id) or nil
+  if type(data) == "table" then
+    data.customFunctions = type(data.customFunctions) == "table" and data.customFunctions or {}
+    if data.customFunctions._legacyRotCleanupDone ~= true then
+      if type(data.actions) == "table" and type(data.actions.rotate) == "table" and data.actions.rotate.enabled == true then
+        data.actions.rotate.enabled = false
+      end
+      data.customFunctions._legacyRotCleanupDone = true
+      if SetData then
+        pcall(SetData, id, data)
+      end
+    end
+  end
+
+  self:StopRotateRuntime(id)
+  if self.RestoreAll then
+    pcall(self.RestoreAll, self)
+  elseif self.Refresh then
+    pcall(self.Refresh, self, id)
+  end
+  return true
+end
 -- ------------------------------------------------------------
 -- Flip Card runtime (v1.2): dual-face + perspective fold + shade + gloss sweep.
 -- Runtime animation does not write DB per frame.
@@ -1573,8 +1761,19 @@ end
 
 
 
-function M:ApplyElement(id, el)
+function M:ApplyElement(id, el, opts)
   if type(id) ~= "string" or type(el) ~= "table" then return end
+  opts = type(opts) == "table" and opts or {}
+
+  if not opts._skipCustomFn then
+    local effective, cfErr = self:BuildEffectiveElementFromCustomFn(id, el)
+    if type(effective) == "table" then
+      el = effective
+    end
+    self._customFnRuntime = self._customFnRuntime or {}
+    self._customFnRuntime[id] = { ok = (cfErr == nil), err = cfErr }
+  end
+
   -- skip groups / containers (no body)
   local isGroup = (el.kind == "group") or (el.type == "group") or (el.regionType == "group") or (el.regionType == "dynamicgroup")
   -- NOTE: Schema 默认会给所有元素塞一个 controlledChildren = {}，
@@ -3239,4 +3438,7 @@ function M:DuplicateSubtree(sourceId)
 
   return newRootId
 end
+
+
+
 

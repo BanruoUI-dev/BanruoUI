@@ -6778,17 +6778,20 @@ function UI:_CommitCustomFnPane()
     end
   end
 
-
   if type(id) == "string" and id ~= "" then
     local data = (API and API.GetData and API:GetData(id)) or (GetData and GetData(id)) or nil
     if type(data) == "table" then
       data.customFunctions = type(data.customFunctions) == "table" and data.customFunctions or {}
-      local slot = type(data.customFunctions.main) == "table" and data.customFunctions.main or {}
-      slot.name = "main"
-      slot.code = src
-      slot.enabled = true
-      if type(time) == "function" then slot.updatedAt = time() end
-      data.customFunctions.main = slot
+      if compact == "" then
+        data.customFunctions.main = nil
+      else
+        local slot = type(data.customFunctions.main) == "table" and data.customFunctions.main or {}
+        slot.name = "main"
+        slot.code = src
+        slot.enabled = true
+        if type(time) == "function" then slot.updatedAt = time() end
+        data.customFunctions.main = slot
+      end
       if API and API.SetData then
         API:SetData(id, data)
       elseif Bre and Bre.SetData then
@@ -6797,7 +6800,14 @@ function UI:_CommitCustomFnPane()
     end
   else
     BreSaved = BreSaved or {}
-    BreSaved._customFnScratch = src
+    BreSaved._customFnScratch = (compact ~= "" and src or "")
+  end
+
+  if compact == "" then
+    local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
+    if Move and Move.OnCustomFnCleared and type(id) == "string" and id ~= "" then
+      pcall(Move.OnCustomFnCleared, Move, id)
+    end
   end
 
   self:_CustomFnSetStatus(p, L("CUSTOMFN_SAVE_OK"), false)
@@ -6812,11 +6822,30 @@ function UI:_RunCustomFnPane()
   if not (cf and cf.code) then return end
 
   local id = f and f._selectedId
-  local data = (type(id) == "string" and id ~= "") and ((API and API.GetData and API:GetData(id)) or (GetData and GetData(id)) or nil) or nil
-
   local src = tostring(cf.code:GetText() or "")
   if _trimCF(src) == "" then
-    self:_CustomFnSetStatus(p, L("CUSTOMFN_EMPTY"), true)
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_OK"), false)
+    local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
+    if Move and Move.OnCustomFnCleared and type(id) == "string" and id ~= "" then
+      pcall(Move.OnCustomFnCleared, Move, id)
+    end
+    return
+  end
+
+  local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
+  if type(id) == "string" and id ~= "" and Move and Move.PreviewCustomFunction then
+    local ok, ret = Move:PreviewCustomFunction(id, src)
+    if not ok then
+      local msg = tostring(ret or "preview failed")
+      if msg == "AND_FALSE" then
+        self:_CustomFnSetStatus(p, L("CUSTOMFN_AND_FAIL"), true)
+      else
+        self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. _shortCFErr(msg)), true)
+      end
+      return
+    end
+    self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_OK") .. (ret ~= nil and (": " .. tostring(ret)) or "")), false)
+    self:RefreshRight()
     return
   end
 
@@ -6825,40 +6854,30 @@ function UI:_RunCustomFnPane()
     self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_FAIL") .. ": no loader", true)
     return
   end
-
-  local fn, err = loader(src, "BreCustomFn:" .. tostring(id or "none"))
+  local fn, err = loader(src, "BreCustomFnCheck:" .. tostring(id or "none"))
   if not fn then
     self:_CustomFnSetStatus(p, (L("CUSTOMFN_COMPILE_FAIL") .. ": " .. _shortCFErr(err)), true)
     return
   end
 
-  local env = setmetatable({ Bre = Bre, UI = self, Gate = Gate, nodeId = id, print = print }, { __index = _G })
+  local env = {
+    math = math, string = string, table = table,
+    tonumber = tonumber, tostring = tostring, type = type,
+    pairs = pairs, ipairs = ipairs, next = next, select = select,
+    pcall = pcall, xpcall = xpcall, assert = assert, print = print,
+  }
   if setfenv then pcall(setfenv, fn, env) end
-
-  local ok, ret = pcall(fn, {
-    nodeId = id,
-    data = data,
-    Bre = Bre,
-    UI = self,
-    Gate = Gate,
-    API = API,
-    baseOk = true,
-  })
-
+  local ok, ret = pcall(fn, { nodeId = id, base = {}, data = {}, patch = {} })
   if not ok then
     self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. _shortCFErr(ret)), true)
     return
   end
-
-
   if ret == false then
     self:_CustomFnSetStatus(p, L("CUSTOMFN_AND_FAIL"), true)
     return
   end
   self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_OK") .. (ret ~= nil and (": " .. tostring(ret)) or "")), false)
-  self:RefreshRight()
 end
-
 function UI:_RefreshCustomFnPane(nodeId)
   local f = self.frame
   local right = f and f._body and f._body._inner and f._body._inner._right
@@ -6871,7 +6890,12 @@ function UI:_RefreshCustomFnPane(nodeId)
   local slot = (type(data) == "table" and type(data.customFunctions) == "table" and type(data.customFunctions.main) == "table") and data.customFunctions.main or nil
   BreSaved = BreSaved or {}
   local scratch = tostring(BreSaved._customFnScratch or "")
-  local code = (slot and type(slot.code) == "string" and slot.code) or scratch
+  local code = ""
+  if hasSel then
+    code = (slot and type(slot.code) == "string" and slot.code) or ""
+  else
+    code = scratch
+  end
 
   cf._suppress = true
   cf.code:SetText(code)
@@ -7085,6 +7109,9 @@ function UI:_SyncMoverBody()
     View:SyncSelection(f)
   end
 end
+
+
+
 
 
 
