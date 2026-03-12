@@ -119,6 +119,10 @@ function UI:ApplyDrawersWhitelist(cfg)
     for _, b in pairs(right._tabBtns or {}) do
       if b and b.Show then b:Show() end
     end
+    -- Keep tab anchors compact/aligned immediately after visibility changes.
+    if self._ApplyRightTabLayout then
+      self:_ApplyRightTabLayout(f._rightMode or "ELEMENT")
+    end
     return
   end
 
@@ -139,6 +143,12 @@ function UI:ApplyDrawersWhitelist(cfg)
     if first then
       self:ShowRightTab(first)
     end
+  end
+
+  -- Re-pack visible tabs immediately so hidden tabs do not leave stale gaps
+  -- until the next user click (layout-only; no data commit side effects).
+  if self._ApplyRightTabLayout then
+    self:_ApplyRightTabLayout(f._rightMode or "ELEMENT")
   end
 end
 
