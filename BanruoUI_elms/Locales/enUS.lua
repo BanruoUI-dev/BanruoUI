@@ -161,6 +161,13 @@ NEW_BTN_PET = "3D Pet",
   CUSTOMFN_RUN_FAIL = "Runtime error",
   CUSTOMFN_COMPILE_FAIL = "Compile error",
   CUSTOMFN_AND_FAIL = "AND check failed",
+  CUSTOMFN_DEBUG_HINT = "Debug panel: base / patch / effective snapshots.",
+  CUSTOMFN_DEBUG_NOSEL = "Debug panel: no selected element.",
+  CUSTOMFN_DEBUG_EMPTY = "Debug panel: no runtime snapshot yet.",
+  CUSTOMFN_DEBUG_BASE = "base:",
+  CUSTOMFN_DEBUG_PATCH = "patch:",
+  CUSTOMFN_DEBUG_EFFECTIVE = "effective:",
+  CUSTOMFN_DEBUG_ERROR = "error:",
 
   -- Conditions drawer
   COND_PLACEHOLDER = "(Placeholder: Condition groups/items and edit controls will be added later)",

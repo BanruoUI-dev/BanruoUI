@@ -102,9 +102,71 @@ local function _cfSafeEnv(id)
   }
   if unpack then env.unpack = unpack end
   if _G and _G.unpack and not env.unpack then env.unpack = _G.unpack end
+  env._G = nil
+  env.Bre = nil
+  env.Gate = nil
+  env.UI = nil
+  env.getfenv = nil
+  env.setfenv = nil
+  env.load = nil
+  env.loadstring = nil
+  env.dofile = nil
+  env.require = nil
   return env
 end
 
+local function _cfDebugSlice(el)
+  if type(el) ~= "table" then return el end
+  local out = {}
+  if type(el.kind) == "string" then out.kind = el.kind end
+  if type(el.type) == "string" then out.type = el.type end
+  if type(el.regionType) == "string" then out.regionType = el.regionType end
+  if type(el.size) == "table" then
+    out.size = {
+      width = tonumber(el.size.width) or el.size.width,
+      height = tonumber(el.size.height) or el.size.height,
+    }
+  end
+  if type(el.props) == "table" then
+    out.props = {
+      xOffset = tonumber(el.props.xOffset) or el.props.xOffset,
+      yOffset = tonumber(el.props.yOffset) or el.props.yOffset,
+      frameStrata = el.props.frameStrata,
+    }
+  end
+  if type(el.actions) == "table" and type(el.actions.rotate) == "table" then
+    out.actions = {
+      rotate = {
+        enabled = (el.actions.rotate.enabled == true),
+        speed = tonumber(el.actions.rotate.speed) or el.actions.rotate.speed,
+        dir = el.actions.rotate.dir,
+        angle = tonumber(el.actions.rotate.angle) or el.actions.rotate.angle,
+      }
+    }
+  end
+  if type(el.flip) == "table" then
+    out.flip = {
+      face = el.flip.face,
+      duration = tonumber(el.flip.duration) or el.flip.duration,
+      axis = el.flip.axis,
+      perspective = tonumber(el.flip.perspective) or el.flip.perspective,
+      shadow = tonumber(el.flip.shadow) or el.flip.shadow,
+      overshoot = tonumber(el.flip.overshoot) or el.flip.overshoot,
+      frontPath = el.flip.frontPath,
+      backPath = el.flip.backPath,
+    }
+  end
+  if type(el.customFunctions) == "table" and type(el.customFunctions.main) == "table" then
+    local main = el.customFunctions.main
+    out.customFunctions = {
+      main = {
+        enabled = (main.enabled == true),
+        codeLen = (type(main.code) == "string") and #main.code or 0,
+      }
+    }
+  end
+  return out
+end
 function M:BuildEffectiveElementFromCustomFn(id, baseEl, sourceCode)
   if type(id) ~= "string" or type(baseEl) ~= "table" then return baseEl, nil, nil end
   local src = sourceCode
@@ -168,9 +230,27 @@ function M:PreviewCustomFunction(id, src)
   local base = GetData and GetData(id) or nil
   if type(base) ~= "table" then return false, "element not found" end
   local effective, err, patch = self:BuildEffectiveElementFromCustomFn(id, base, src)
+
+  self._customFnRuntime = self._customFnRuntime or {}
+  self._customFnRuntime[id] = {
+    ok = (err == nil),
+    err = err,
+    base = _cfDebugSlice(base),
+    patch = _cfDebugSlice(patch),
+    effective = _cfDebugSlice(effective),
+    preview = true,
+    ts = (GetTime and GetTime()) or 0,
+  }
+
   if not effective then return false, tostring(err or "preview failed") end
   self:ApplyElement(id, effective, { _skipCustomFn = true })
   return true, patch
+end
+function M:GetCustomFnDebugState(id)
+  if type(id) ~= "string" or id == "" then return nil end
+  local rt = self._customFnRuntime and self._customFnRuntime[id] or nil
+  if type(rt) ~= "table" then return nil end
+  return _cfDeepCopy(rt)
 end
 
 -- ------------------------------------------------------------
@@ -285,22 +365,14 @@ end
 -- UI should call this single semantic API instead of orchestrating runtime details.
 function M:OnCustomFnCleared(id)
   if type(id) ~= "string" or id == "" then return false end
-  -- One-time legacy cleanup:
-  -- Older CustomFn flows may have persisted rotate.enabled=true into base data.
-  -- In strict WA-like mode, clearing function should remove that legacy residue.
-  local data = GetData and GetData(id) or nil
-  if type(data) == "table" then
-    data.customFunctions = type(data.customFunctions) == "table" and data.customFunctions or {}
-    if data.customFunctions._legacyRotCleanupDone ~= true then
-      if type(data.actions) == "table" and type(data.actions.rotate) == "table" and data.actions.rotate.enabled == true then
-        data.actions.rotate.enabled = false
-      end
-      data.customFunctions._legacyRotCleanupDone = true
-      if SetData then
-        pcall(SetData, id, data)
-      end
-    end
-  end
+
+  self._customFnRuntime = self._customFnRuntime or {}
+  self._customFnRuntime[id] = {
+    ok = true,
+    err = nil,
+    cleared = true,
+    ts = (GetTime and GetTime()) or 0,
+  }
 
   self:StopRotateRuntime(id)
   if self.RestoreAll then
@@ -1765,13 +1837,21 @@ function M:ApplyElement(id, el, opts)
   if type(id) ~= "string" or type(el) ~= "table" then return end
   opts = type(opts) == "table" and opts or {}
 
-  if not opts._skipCustomFn then
-    local effective, cfErr = self:BuildEffectiveElementFromCustomFn(id, el)
+    if not opts._skipCustomFn then
+    local baseForDebug = _cfDebugSlice(el)
+    local effective, cfErr, patch = self:BuildEffectiveElementFromCustomFn(id, el)
     if type(effective) == "table" then
       el = effective
     end
     self._customFnRuntime = self._customFnRuntime or {}
-    self._customFnRuntime[id] = { ok = (cfErr == nil), err = cfErr }
+    self._customFnRuntime[id] = {
+      ok = (cfErr == nil),
+      err = cfErr,
+      base = baseForDebug,
+      patch = _cfDebugSlice(patch),
+      effective = _cfDebugSlice(el),
+      ts = (GetTime and GetTime()) or 0,
+    }
   end
 
   -- skip groups / containers (no body)

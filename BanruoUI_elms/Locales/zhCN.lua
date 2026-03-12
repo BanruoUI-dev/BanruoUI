@@ -157,6 +157,13 @@ NEW_BTN_PET = "3D小宠物",
   CUSTOMFN_RUN_FAIL = "运行错误",
   CUSTOMFN_COMPILE_FAIL = "编译错误",
   CUSTOMFN_AND_FAIL = "AND 未通过",
+  CUSTOMFN_DEBUG_HINT = "调试面板：显示 base / patch / effective 快照。",
+  CUSTOMFN_DEBUG_NOSEL = "调试面板：未选择元素。",
+  CUSTOMFN_DEBUG_EMPTY = "调试面板：暂无运行快照。",
+  CUSTOMFN_DEBUG_BASE = "base:",
+  CUSTOMFN_DEBUG_PATCH = "patch:",
+  CUSTOMFN_DEBUG_EFFECTIVE = "effective:",
+  CUSTOMFN_DEBUG_ERROR = "error:",
 
   -- Conditions drawer
   COND_PLACEHOLDER = "（占位：后续接入条件组/条件条目与编辑控件）",

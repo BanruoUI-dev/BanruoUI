@@ -6743,6 +6743,33 @@ local function _shortCFErr(err)
   return tostring(msg)
 end
 
+local function _cfDbgValue(v, depth)
+  depth = tonumber(depth) or 0
+  if depth <= 0 then return "..." end
+  local t = type(v)
+  if t == "nil" then return "nil" end
+  if t == "number" or t == "boolean" then return tostring(v) end
+  if t == "string" then
+    if #v > 80 then
+      return string.format("%q", string.sub(v, 1, 77) .. "...")
+    end
+    return string.format("%q", v)
+  end
+  if t ~= "table" then return "<" .. t .. ">" end
+
+  local out = {}
+  local c = 0
+  for k, val in pairs(v) do
+    c = c + 1
+    if c > 8 then
+      out[#out + 1] = "..."
+      break
+    end
+    out[#out + 1] = tostring(k) .. "=" .. _cfDbgValue(val, depth - 1)
+  end
+  return "{" .. table.concat(out, ", ") .. "}"
+end
+
 function UI:_CustomFnSetStatus(p, msg, isErr)
   if not (p and p._customFn and p._customFn.status) then return end
   local fs = p._customFn.status
@@ -6813,7 +6840,6 @@ function UI:_CommitCustomFnPane()
   self:_CustomFnSetStatus(p, L("CUSTOMFN_SAVE_OK"), false)
   self:RefreshRight()
 end
-
 function UI:_RunCustomFnPane()
   local f = self.frame
   local right = f and f._body and f._body._inner and f._body._inner._right
@@ -6823,60 +6849,57 @@ function UI:_RunCustomFnPane()
 
   local id = f and f._selectedId
   local src = tostring(cf.code:GetText() or "")
+  local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
+
   if _trimCF(src) == "" then
     self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_OK"), false)
-    local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
     if Move and Move.OnCustomFnCleared and type(id) == "string" and id ~= "" then
       pcall(Move.OnCustomFnCleared, Move, id)
     end
-    return
-  end
-
-  local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
-  if type(id) == "string" and id ~= "" and Move and Move.PreviewCustomFunction then
-    local ok, ret = Move:PreviewCustomFunction(id, src)
-    if not ok then
-      local msg = tostring(ret or "preview failed")
-      if msg == "AND_FALSE" then
-        self:_CustomFnSetStatus(p, L("CUSTOMFN_AND_FAIL"), true)
-      else
-        self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. _shortCFErr(msg)), true)
-      end
-      return
-    end
-    self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_OK") .. (ret ~= nil and (": " .. tostring(ret)) or "")), false)
-    self:RefreshRight()
+    self:_RefreshCustomFnDebug(id)
     return
   end
 
   local loader = loadstring or load
   if type(loader) ~= "function" then
     self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_FAIL") .. ": no loader", true)
+    self:_RefreshCustomFnDebug(id)
     return
   end
-  local fn, err = loader(src, "BreCustomFnCheck:" .. tostring(id or "none"))
-  if not fn then
-    self:_CustomFnSetStatus(p, (L("CUSTOMFN_COMPILE_FAIL") .. ": " .. _shortCFErr(err)), true)
+  local _, cErr = loader(src, "BreCustomFnCheck:" .. tostring(id or "none"))
+  if cErr then
+    self:_CustomFnSetStatus(p, (L("CUSTOMFN_COMPILE_FAIL") .. ": " .. _shortCFErr(cErr)), true)
+    self:_RefreshCustomFnDebug(id)
     return
   end
 
-  local env = {
-    math = math, string = string, table = table,
-    tonumber = tonumber, tostring = tostring, type = type,
-    pairs = pairs, ipairs = ipairs, next = next, select = select,
-    pcall = pcall, xpcall = xpcall, assert = assert, print = print,
-  }
-  if setfenv then pcall(setfenv, fn, env) end
-  local ok, ret = pcall(fn, { nodeId = id, base = {}, data = {}, patch = {} })
+  if not (type(id) == "string" and id ~= "") then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_NOSEL"), true)
+    self:_RefreshCustomFnDebug(nil)
+    return
+  end
+
+  if not (Move and Move.PreviewCustomFunction) then
+    self:_CustomFnSetStatus(p, L("CUSTOMFN_RUN_FAIL") .. ": no move preview", true)
+    self:_RefreshCustomFnDebug(id)
+    return
+  end
+
+  local ok, ret = Move:PreviewCustomFunction(id, src)
   if not ok then
-    self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. _shortCFErr(ret)), true)
+    local msg = tostring(ret or "preview failed")
+    if msg == "AND_FALSE" then
+      self:_CustomFnSetStatus(p, L("CUSTOMFN_AND_FAIL"), true)
+    else
+      self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_FAIL") .. ": " .. _shortCFErr(msg)), true)
+    end
+    self:_RefreshCustomFnDebug(id)
     return
   end
-  if ret == false then
-    self:_CustomFnSetStatus(p, L("CUSTOMFN_AND_FAIL"), true)
-    return
-  end
+
   self:_CustomFnSetStatus(p, (L("CUSTOMFN_RUN_OK") .. (ret ~= nil and (": " .. tostring(ret)) or "")), false)
+  self:_RefreshCustomFnDebug(id)
+  self:RefreshRight()
 end
 function UI:_RefreshCustomFnPane(nodeId)
   local f = self.frame
@@ -6911,8 +6934,44 @@ function UI:_RefreshCustomFnPane(nodeId)
   else
     self:_CustomFnSetStatus(p, L("CUSTOMFN_HINT"), false)
   end
+
+  self:_RefreshCustomFnDebug(nodeId)
 end
 
+function UI:_RefreshCustomFnDebug(nodeId)
+  local f = self.frame
+  local right = f and f._body and f._body._inner and f._body._inner._right
+  local p = right and right._panes and right._panes.CustomFn
+  local cf = p and p._customFn
+  if not (cf and cf.applyLayout) then return end
+
+  local mode = (Bre and Bre.Profile and Bre.Profile.GetMode and Bre.Profile:GetMode()) or "FULL"
+  local show = (cf.debugEnabled == true) and (mode == "DEV" or mode == "FULL")
+  cf.applyLayout(show)
+  if not (show and cf.debugText) then return end
+
+  if not (type(nodeId) == "string" and nodeId ~= "") then
+    cf.debugText:SetText(L("CUSTOMFN_DEBUG_NOSEL"))
+    return
+  end
+
+  local Move = (Gate and Gate.Get and Gate:Get("Move")) or (Bre and Bre.Move)
+  local st = (Move and Move.GetCustomFnDebugState and Move:GetCustomFnDebugState(nodeId)) or nil
+  if type(st) ~= "table" then
+    cf.debugText:SetText(L("CUSTOMFN_DEBUG_EMPTY"))
+    return
+  end
+
+  local lines2 = {
+    L("CUSTOMFN_DEBUG_BASE") .. " " .. _cfDbgValue(st.base, 3),
+    L("CUSTOMFN_DEBUG_PATCH") .. " " .. _cfDbgValue(st.patch, 3),
+    L("CUSTOMFN_DEBUG_EFFECTIVE") .. " " .. _cfDbgValue(st.effective, 3),
+  }
+  if st.err ~= nil then
+    lines2[#lines2 + 1] = L("CUSTOMFN_DEBUG_ERROR") .. " " .. tostring(st.err)
+  end
+  cf.debugText:SetText(table.concat(lines2, "\n"))
+end
 function UI:BuildCustomFnPane(p)
   if not p then return end
 
@@ -6930,9 +6989,10 @@ function UI:BuildCustomFnPane(p)
   codeLbl:SetTextColor(1, 0.82, 0.05)
   codeLbl:SetText(L("CUSTOMFN_CODE"))
 
-  local scroll = CreateFrame("ScrollFrame", nil, p, "InputScrollFrameTemplate")
+  local scroll = CreateFrame("ScrollFrame", nil, p, "UIPanelScrollFrameTemplate")
   scroll:SetPoint("TOPLEFT", 18, -66)
-  scroll:SetPoint("BOTTOMRIGHT", -29, 84)
+  scroll:SetPoint("BOTTOMRIGHT", -36, 84)
+
 
   local codeFrame = CreateFrame("Frame", nil, p, "BackdropTemplate")
   codeFrame:SetPoint("TOPLEFT", scroll, "TOPLEFT", -3, 2)
@@ -6943,107 +7003,37 @@ function UI:BuildCustomFnPane(p)
       edgeFile = "Interface\\Buttons\\WHITE8x8",
       edgeSize = 1,
     })
-    codeFrame:SetBackdropColor(0, 0, 0, 0.30)
+    codeFrame:SetBackdropColor(0, 0, 0, 0.28)
     codeFrame:SetBackdropBorderColor(1, 0.82, 0.05, 0.45)
   end
 
-  local topLevel = (p.GetFrameLevel and p:GetFrameLevel()) or 1
-  codeFrame:SetFrameLevel(topLevel + 3)
-  scroll:SetFrameLevel(topLevel + 4)
-
-  local code = scroll.EditBox
-  if not code then return end
-
+  local code = CreateFrame("EditBox", nil, scroll)
   code:SetMultiLine(true)
   code:SetAutoFocus(false)
   code:EnableKeyboard(true)
   code:EnableMouse(true)
-  code:SetFontObject("ChatFontNormal")
-  code:SetTextInsets(6, 6, 6, 6)
+  code:SetFontObject(ChatFontNormal)
   code:SetTextColor(1, 1, 1, 1)
+  code:SetTextInsets(6, 6, 6, 6)
   code:SetScript("OnMouseDown", function(self) self:SetFocus() end)
   code:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-
-  -- Hide template chrome so it matches Bre style while keeping WA-like editing behavior.
-  if scroll.Top then scroll.Top:Hide() end
-  if scroll.Bottom then scroll.Bottom:Hide() end
-  if scroll.Middle then scroll.Middle:Hide() end
+  if code.SetAltArrowKeyMode then code:SetAltArrowKeyMode(false) end
+  code:SetScript("OnTabPressed", function(self)
+    self:Insert("  ")
+  end)
+  code:SetWidth(560)
+  code:SetHeight(2000)
+  scroll:SetScrollChild(code)
 
   local function syncCodeSize()
-    local w = (scroll:GetWidth() or 300) - 28
-    if w < 140 then w = 140 end
+    local w = (scroll:GetWidth() or 560) - 20
+    if w < 200 then w = 200 end
     code:SetWidth(w)
-    local lines = code:GetNumLines() or 1
-    local minH = math.max(220, (scroll:GetHeight() or 282) - 6)
-    local h = math.max(minH, lines * 14 + 24)
-    code:SetHeight(h)
+    code:SetHeight(2000)
   end
 
-  local caret = code:CreateTexture(nil, "OVERLAY")
-  caret:SetColorTexture(1, 0.85, 0.05, 0.95)
-  caret:SetWidth(2)
-  caret:SetHeight(14)
-  caret:Hide()
-
-  local measure = code:CreateFontString(nil, "ARTWORK", "ChatFontNormal")
-  measure:Hide()
-
-  local function updateCaret()
-    if not code:HasFocus() then
-      caret:Hide()
-      return
-    end
-    local txt = code:GetText() or ""
-    local pos = tonumber(code:GetCursorPosition()) or 0
-    if pos < 0 then pos = 0 end
-    if pos > #txt then pos = #txt end
-
-    local prefix = txt:sub(1, pos)
-    local line = 1
-    for _ in prefix:gmatch("\n") do line = line + 1 end
-    local tail = prefix:match("([^\n]*)$") or ""
-
-    measure:SetText(tail)
-    local x = 6 + (measure.GetStringWidth and measure:GetStringWidth() or 0)
-    local _, lineH = code:GetFont()
-    lineH = tonumber(lineH) or 14
-    local y = -6 - ((line - 1) * lineH)
-
-    caret:ClearAllPoints()
-    caret:SetPoint("TOPLEFT", code, "TOPLEFT", x, y)
-    caret:SetHeight(math.max(12, lineH))
-    caret:Show()
-  end
-
-  local blink = 0
-  code:HookScript("OnUpdate", function(_, elapsed)
-    if not code:HasFocus() then
-      caret:Hide()
-      return
-    end
-    blink = blink + (tonumber(elapsed) or 0)
-    local phase = blink % 1
-    caret:SetAlpha((phase < 0.5) and 1 or 0.18)
-    updateCaret()
-  end)
-
-  code:HookScript("OnEditFocusGained", function()
-    updateCaret()
-  end)
-  code:HookScript("OnEditFocusLost", function()
-    caret:Hide()
-  end)
-  code:HookScript("OnCursorChanged", function()
-    updateCaret()
-  end)
-
-  code:SetScript("OnTextChanged", function()
-    syncCodeSize()
-    updateCaret()
-  end)
   scroll:SetScript("OnSizeChanged", function()
     syncCodeSize()
-    updateCaret()
   end)
 
   local btnSave = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
@@ -7056,12 +7046,35 @@ function UI:BuildCustomFnPane(p)
   btnRun:SetPoint("LEFT", btnSave, "RIGHT", 10, 0)
   btnRun:SetText(L("CUSTOMFN_RUN"))
 
+  code:HookScript("OnKeyDown", function(self, key)
+    local ctrl = (type(IsControlKeyDown) == "function") and IsControlKeyDown() or false
+    if ctrl and (key == "A" or key == "a") then
+      self:HighlightText()
+      return
+    end
+    if ctrl and (key == "S" or key == "s") then
+      UI:_CommitCustomFnPane()
+      return
+    end
+    if ctrl and (key == "R" or key == "r" or key == "ENTER" or key == "NUMPADENTER") then
+      UI:_RunCustomFnPane()
+      return
+    end
+  end)
+
   local status = p:CreateFontString(nil, "OVERLAY", (Bre.Font and Bre.Font:HighlightSmall() or "GameFontHighlightSmall"))
   status:SetPoint("LEFT", btnRun, "RIGHT", 12, 0)
   status:SetPoint("RIGHT", -22, 0)
   status:SetJustifyH("LEFT")
   status:SetTextColor(0.9, 0.9, 0.9)
   status:SetText(L("CUSTOMFN_HINT"))
+
+  local function applyLayout(_)
+    scroll:ClearAllPoints()
+    scroll:SetPoint("TOPLEFT", 18, -66)
+    scroll:SetPoint("BOTTOMRIGHT", -36, 84)
+    syncCodeSize()
+  end
 
   p._customFn = {
     title = title,
@@ -7070,6 +7083,10 @@ function UI:BuildCustomFnPane(p)
     btnSave = btnSave,
     btnRun = btnRun,
     status = status,
+    debugBox = nil,
+    debugText = nil,
+    debugEnabled = false,
+    applyLayout = applyLayout,
     syncHeight = syncCodeSize,
     _suppress = false,
   }
@@ -7077,8 +7094,10 @@ function UI:BuildCustomFnPane(p)
   btnSave:SetScript("OnClick", function() UI:_CommitCustomFnPane() end)
   btnRun:SetScript("OnClick", function() UI:_RunCustomFnPane() end)
 
-  syncCodeSize()
+  applyLayout(false)
 end
+
+
 -- Public
 -- ------------------------------------------------------------
 function UI:Toggle()
@@ -7086,8 +7105,6 @@ function UI:Toggle()
   if f:IsShown() then
     f:Hide()
   else
-    -- v1.13.14: auto-apply Compact (560x560) during show flow.
-    -- This is intentionally an automatic SetSize in the display path (user-requested).
     if Bre and Bre.Profile and Bre.Profile.Apply then
       pcall(function() Bre.Profile:Apply(UI) end)
     end
@@ -7097,7 +7114,6 @@ function UI:Toggle()
     self:RefreshRight()
   end
 end
-
 
 -- v2.8.8: sync mover body (on-screen) with current selection
 function UI:_SyncMoverBody()
@@ -7109,6 +7125,9 @@ function UI:_SyncMoverBody()
     View:SyncSelection(f)
   end
 end
+
+
+
 
 
 
