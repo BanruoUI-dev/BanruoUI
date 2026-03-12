@@ -1,4 +1,4 @@
-﻿## Interface: 120001,120000
+## Interface: 120001,120000
 ## Title: BanruoUI_elms
 ## Notes: BanruoUI child plugin (Elms) - engine rebuild skeleton (12.0+)
 ## Author: BanruoUI / BrA rebuild
@@ -42,6 +42,7 @@ Core/DrawerSpec_CustomMat.lua
 Core/DrawerSpec_ProgressMat.lua
 Core/DrawerSpec_Model.lua
 Core/DrawerSpec_StopMotion.lua
+Core/DrawerSpec_FlipCard.lua
 Core/DrawerSpec_Actions.lua
 Core/DrawerSpec_Conditions.lua
 Core/DrawerSpec_ThemeMinimal.lua

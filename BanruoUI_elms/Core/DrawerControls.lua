@@ -249,6 +249,20 @@ function DC:MakeColorButton(parent, x, y)
 end
 
 -- ------------------------------------------------------------
+-- Button Factory
+-- ------------------------------------------------------------
+function DC:MakeButton(parent, textKey, x, y, width, height)
+  width = width or 150
+  height = height or 22
+
+  local btn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+  btn:SetSize(width, height)
+  btn:SetPoint("TOPLEFT", x or 0, y or 0)
+  btn:SetText(_L(textKey))
+  return btn
+end
+
+-- ------------------------------------------------------------
 -- Texture Preview Factory (for CustomMat)
 -- ------------------------------------------------------------
 function DC:MakeTexturePreview(parent, x, y, size)

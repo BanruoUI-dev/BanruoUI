@@ -126,6 +126,15 @@ function S:CreateElement(regionType, opts)
     rotation = 0,
   }
 
+  if t.regionType == "flipcard" then
+    t.flip = {
+      frontPath = "",
+      backPath = "",
+      currentFace = "front",
+      isFlipping = false,
+      duration = 0.35,
+    }
+  end
   -- optional module blocks (placeholders)
   t.conditions = {}
   t.customFunctions = {}
@@ -173,6 +182,14 @@ function S:NormalizeElement(e)
   e.region = ensureTable(e.region)
   if e.region.color == nil then e.region.color = { r = 1, g = 1, b = 1, a = 1 } end
 
+  if e.regionType == "flipcard" then
+    e.flip = ensureTable(e.flip)
+    if e.flip.frontPath == nil then e.flip.frontPath = "" end
+    if e.flip.backPath == nil then e.flip.backPath = "" end
+    if e.flip.currentFace ~= "back" then e.flip.currentFace = "front" end
+    if e.flip.isFlipping == nil then e.flip.isFlipping = false end
+    if e.flip.duration == nil then e.flip.duration = 0.35 end
+  end
   e.conditions = ensureTable(e.conditions)
   e.customFunctions = ensureTable(e.customFunctions)
 

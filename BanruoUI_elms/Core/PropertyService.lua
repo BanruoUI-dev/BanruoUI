@@ -64,6 +64,29 @@ function PS:Normalize(propKey, value)
     return v
   end
 
+  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' then
+    local v = tostring(value or "")
+    v = v:gsub("^%s+", ""):gsub("%s+$", "")
+    return v
+  end
+
+  if propKey == 'flip.currentFace' then
+    local v = tostring(value or 'front')
+    if v ~= 'front' and v ~= 'back' then v = 'front' end
+    return v
+  end
+
+  if propKey == 'flip.duration' then
+    local v = tonumber(value)
+    if not v then return 0.35 end
+    if v < 0.05 then v = 0.05 end
+    if v > 3 then v = 3 end
+    return v
+  end
+
+  if propKey == 'flip.isFlipping' then
+    return value and true or false
+  end
   if propKey == 'stopmotion.path' then
     local v = tostring(value or "")
     v = v:gsub("^%s+", ""):gsub("%s+$", "")
@@ -269,6 +292,39 @@ function PS:Get(nodeId, propKey)
     return tonumber(data.animSequence) or 0
   end
 
+  if propKey == 'flip.frontPath' then
+    if type(data.flip) == 'table' then
+      return tostring(data.flip.frontPath or "")
+    end
+    return ""
+  end
+
+  if propKey == 'flip.backPath' then
+    if type(data.flip) == 'table' then
+      return tostring(data.flip.backPath or "")
+    end
+    return ""
+  end
+
+  if propKey == 'flip.currentFace' then
+    if type(data.flip) == 'table' then
+      local v = tostring(data.flip.currentFace or 'front')
+      if v ~= 'back' then v = 'front' end
+      return v
+    end
+    return 'front'
+  end
+
+  if propKey == 'flip.duration' then
+    if type(data.flip) == 'table' then
+      return tonumber(data.flip.duration) or 0.35
+    end
+    return 0.35
+  end
+
+  if propKey == 'flip.isFlipping' then
+    return (type(data.flip) == 'table' and data.flip.isFlipping) and true or false
+  end
   if propKey == 'stopmotion.path' then
     if type(data.stopmotion) == 'table' then
       return tostring(data.stopmotion.path or "")
@@ -422,6 +478,28 @@ function PS:Set(nodeId, propKey, value, opts)
     return true
   end
 
+  if propKey == 'flip.frontPath' or propKey == 'flip.backPath' or propKey == 'flip.currentFace' or propKey == 'flip.duration' or propKey == 'flip.isFlipping' then
+    data.flip = type(data.flip) == 'table' and data.flip or {}
+    if propKey == 'flip.frontPath' then
+      data.flip.frontPath = v or ""
+    elseif propKey == 'flip.backPath' then
+      data.flip.backPath = v or ""
+    elseif propKey == 'flip.currentFace' then
+      data.flip.currentFace = (v == 'back') and 'back' or 'front'
+      data.flip.isFlipping = false
+    elseif propKey == 'flip.duration' then
+      data.flip.duration = tonumber(v) or 0.35
+    elseif propKey == 'flip.isFlipping' then
+      data.flip.isFlipping = v and true or false
+    end
+    _setData(nodeId, data)
+
+    local Move = Gate and Gate.Get and Gate:Get('Move') or nil
+    if Move and Move.Refresh then
+      pcall(Move.Refresh, Move, nodeId)
+    end
+    return true
+  end
   if propKey == 'scale' then
     data.scale = v
     _setData(nodeId, data)

@@ -1354,6 +1354,7 @@ function UI:BuildNewOverlay(parent)
     { key = "progress",   label = L("NEW_BTN_MAT_PROGRESS") or "Progress Texture" },
     { key = "stopmotion", label = L("NEW_BTN_STOPMOTION") or "Stop Motion" },
     { key = "model",      label = L("NEW_BTN_MODEL") or "3D Model" },
+    { key = "flipcard",   label = L("NEW_BTN_FLIPCARD") or "Flip Card" },
     { key = "pet",        label = L("NEW_BTN_PET") or "3D Pet" },
     { key = "fx",         label = L("NEW_BTN_FX") or "3D FX" },
   }
@@ -1566,6 +1567,19 @@ local function _createNode(regionType, id, parentId)
     node.alpha = node.alpha or 1
   end
 
+  -- FlipCard specific defaults (v1)
+  if regionType == "flipcard" then
+    node.size = node.size or {}
+    node.size.width = node.size.width or 256
+    node.size.height = node.size.height or 256
+    node.flip = type(node.flip) == "table" and node.flip or {}
+    node.flip.frontPath = node.flip.frontPath or ""
+    node.flip.backPath = node.flip.backPath or ""
+    node.flip.currentFace = (node.flip.currentFace == "back") and "back" or "front"
+    node.flip.isFlipping = false
+    node.flip.duration = tonumber(node.flip.duration) or 0.35
+  end
+
   return node
 end
 
@@ -1626,7 +1640,7 @@ function UI:OnNewOverlayAction(key)
   if not f then return end
 
   -- Implement base test actions now: group + custom texture + progress + model (shell only).
-  if key ~= "group" and key ~= "mat_custom" and key ~= "progress" and key ~= "model" and key ~= "stopmotion" then
+  if key ~= "group" and key ~= "mat_custom" and key ~= "progress" and key ~= "model" and key ~= "stopmotion" and key ~= "flipcard" then
     return
   end
 
@@ -1655,6 +1669,8 @@ function UI:OnNewOverlayAction(key)
     regionType = "stopmotion"
   elseif key == "model" then
     regionType = "model"
+  elseif key == "flipcard" then
+    regionType = "flipcard"
   else
     regionType = "custom"
   end
@@ -1667,6 +1683,8 @@ function UI:OnNewOverlayAction(key)
     prefix = "StopMotion"
   elseif key == "model" then
     prefix = "Model"
+  elseif key == "flipcard" then
+    prefix = "FlipCard"
   else
     prefix = "Mat"
   end
@@ -3399,6 +3417,7 @@ if eg and eg.RunGuarded then
       local isCustom = false
       local isModel = false
       local isStopMotion = false
+      local isFlipCard = false
       if type(selData) == "table" then
         if selData.regionType == "progress" then
           isProgress = true
@@ -3424,6 +3443,12 @@ if eg and eg.RunGuarded then
           isStopMotion = true
         elseif type(selData.features) == "table" and selData.features.stopmotion then
           isStopMotion = true
+        end
+
+        if selData.regionType == "flipcard" then
+          isFlipCard = true
+        elseif type(selData.features) == "table" and selData.features.flipcard then
+          isFlipCard = true
         end
       end
 
@@ -3451,6 +3476,9 @@ if eg and eg.RunGuarded then
         elseif isStopMotion then
           ep:OpenDrawer("StopMotion")
           f._rightDrawer = "StopMotion"
+        elseif isFlipCard then
+          ep:OpenDrawer("FlipCard")
+          f._rightDrawer = "FlipCard"
         elseif isCustom then
           ep:OpenDrawer("CustomMat")
           f._rightDrawer = "CustomMat"
@@ -3719,6 +3747,14 @@ if eg and eg.RunGuarded then
       end
     end
 
+    if ep and ep._activeDrawerId == "FlipCard" then
+      local DT = Bre.DrawerTemplate
+      local d = (ep._drawers and ep._drawers.FlipCard)
+      if DT and DT.Refresh and d then
+        DT:Refresh(d, id)
+      end
+    end
+
     -- ThemeMinimal drawer refresh (size/strata/offsets)
     if ep and ep._activeDrawerId == "ThemeMinimal" then
       local DT = Bre.DrawerTemplate
@@ -3889,6 +3925,7 @@ if ep and ep.OpenDrawer and ep.CloseAll then
 
   local isProgress = false
   local isCustom = false
+  local isFlipCard = false
   if type(selData) == "table" then
     if selData.regionType == "progress" then
       isProgress = true
@@ -3903,6 +3940,12 @@ if ep and ep.OpenDrawer and ep.CloseAll then
     elseif type(selData.features) == "table" and selData.features.custom then
       isCustom = true
     end
+
+    if selData.regionType == "flipcard" then
+      isFlipCard = true
+    elseif type(selData.features) == "table" and selData.features.flipcard then
+      isFlipCard = true
+    end
   end
 
   if (not id) or isGroup or type(selData) ~= "table" then
@@ -3912,6 +3955,9 @@ if ep and ep.OpenDrawer and ep.CloseAll then
     if isProgress then
       ep:OpenDrawer("ProgressMat")
       f._rightDrawer = "ProgressMat"
+    elseif isFlipCard then
+      ep:OpenDrawer("FlipCard")
+      f._rightDrawer = "FlipCard"
     elseif isCustom then
       ep:OpenDrawer("CustomMat")
       f._rightDrawer = "CustomMat"
@@ -5401,6 +5447,25 @@ typeBox:SetOptions({
       p._drawers.Model = drawer
     end
     p._drawerOrder.Model = p._drawerOrder.Model or 2
+  end
+
+  -- FlipCard drawer (v1): Front/Back + one-shot trigger
+  do
+    local DT = Bre.DrawerTemplate
+    local spec = Bre.DrawerSpec_FlipCard
+    if DT and spec then
+      local newDrawer = DT:Create(p, spec)
+      if newDrawer then
+        p._drawers.FlipCard = newDrawer
+      end
+    end
+    if not p._drawers.FlipCard then
+      local drawer = CreateFrame("Frame", nil, p, "BackdropTemplate")
+      drawer:SetAllPoints(p)
+      drawer:Hide()
+      p._drawers.FlipCard = drawer
+    end
+    p._drawerOrder.FlipCard = p._drawerOrder.FlipCard or 5
   end
 
   -- StepX (v1.13.x): ThemeMinimal drawer (single-column: size + strata + offsets)

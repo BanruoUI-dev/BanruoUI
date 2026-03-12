@@ -294,6 +294,12 @@ function DT:_BuildSpecificContent(content, spec, startY)
       local itemY = currentY + (item.y or 0) - 12
       if itemY < minY then minY = itemY end
       
+    elseif item.type == "button" then
+      local btn = DC:MakeButton(content, item.text, item.x or 0, currentY + (item.y or 0), item.width, item.height)
+      if item.id then controls[item.id] = btn end
+      local itemY = currentY + (item.y or 0) - (item.height or 22)
+      if itemY < minY then minY = itemY end
+      
     elseif item.type == "editbox" then
       local eb = DC:MakeEditBox(content, item.x or 0, currentY + (item.y or 0), item.width)
       if item.id then controls[item.id] = eb end
@@ -1419,6 +1425,8 @@ function DT:WireEvents(drawer, nodeId)
     self:_WireActionsEvents(drawer, controls)
   elseif drawer._spec.drawerId == "Model" then
     self:_WireModelEvents(drawer, controls)
+  elseif drawer._spec.drawerId == "FlipCard" then
+    self:_WireFlipCardEvents(drawer, controls)
   elseif drawer._spec.drawerId == "StopMotion" then
     self:_WireStopMotionEvents(drawer, controls)
   elseif drawer._spec.drawerId == "Conditions" then
@@ -1930,6 +1938,112 @@ function DT:_WireModelEvents(drawer, controls)
   end
 end
 
+-- Wire FlipCard drawer specific events
+function DT:_WireFlipCardEvents(drawer, controls)
+  local Gate = Bre.Gate
+  local UI = Bre.UI
+  if not controls then return end
+
+  local function _GetBoundNodeId(control)
+    if control and type(control._editBindNodeId) == "string" and control._editBindNodeId ~= "" then
+      return control._editBindNodeId
+    end
+    local f = UI and UI.frame
+    return f and f._selectedId or nil
+  end
+
+  local function _CommitPath(container, propKey)
+    local eb = container and container._editbox
+    if not (eb and eb.GetText) then return end
+    local id = _GetBoundNodeId(container)
+    if not id then return end
+    local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+    if not (PS and PS.Set) then return end
+    local v = eb:GetText() or ""
+    pcall(PS.Set, PS, id, propKey, v)
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
+
+  local function _CommitDuration(control)
+    if not (control and control.GetText) then return end
+    local id = _GetBoundNodeId(control)
+    if not id then return end
+    local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+    if not (PS and PS.Set) then return end
+    local n = tonumber(control:GetText() or "")
+    if not n then n = 0.35 end
+    if n < 0.05 then n = 0.05 end
+    if n > 3 then n = 3 end
+    pcall(PS.Set, PS, id, "flip.duration", n)
+    if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+  end
+
+  if controls.frontPath and controls.frontPath._editbox and controls.frontPath._editbox.SetScript then
+    controls.frontPath._editbox:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitPath(controls.frontPath, "flip.frontPath")
+    end)
+    controls.frontPath._editbox:SetScript("OnEditFocusLost", function(self)
+      _CommitPath(controls.frontPath, "flip.frontPath")
+    end)
+  end
+
+  if controls.backPath and controls.backPath._editbox and controls.backPath._editbox.SetScript then
+    controls.backPath._editbox:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitPath(controls.backPath, "flip.backPath")
+    end)
+    controls.backPath._editbox:SetScript("OnEditFocusLost", function(self)
+      _CommitPath(controls.backPath, "flip.backPath")
+    end)
+  end
+
+  if controls.duration and controls.duration.SetScript then
+    controls.duration:SetScript("OnEnterPressed", function(self)
+      self:ClearFocus()
+      _CommitDuration(self)
+    end)
+    controls.duration:SetScript("OnEditFocusLost", function(self)
+      _CommitDuration(self)
+    end)
+  end
+
+  if controls.currentFace and UIDropDownMenu_Initialize then
+    UIDropDownMenu_Initialize(controls.currentFace, function(self, level)
+      if level ~= 1 then return end
+      local function _Add(value, textKey)
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = (Bre and Bre.L and Bre.L(textKey)) or value
+        info.value = value
+        info.func = function()
+          local id = _GetBoundNodeId(controls.currentFace)
+          if not id then return end
+          local PS = Gate and Gate.Get and Gate:Get("PropertyService") or nil
+          if not (PS and PS.Set) then return end
+          controls.currentFace.__value = value
+          UIDropDownMenu_SetText(controls.currentFace, info.text)
+          pcall(PS.Set, PS, id, "flip.currentFace", value)
+          if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+        end
+        UIDropDownMenu_AddButton(info, level)
+      end
+      _Add("front", "ELEM_FLIPCARD_FACE_FRONT")
+      _Add("back", "ELEM_FLIPCARD_FACE_BACK")
+    end)
+  end
+
+  if controls.trigger and controls.trigger.SetScript then
+    controls.trigger:SetScript("OnClick", function(btn)
+      local id = _GetBoundNodeId(btn)
+      if not id then return end
+      local Move = Gate and Gate.Get and Gate:Get("Move") or nil
+      if Move and Move.TriggerFlipOnce then
+        pcall(Move.TriggerFlipOnce, Move, id)
+      end
+      if UI and UI.RefreshRight then pcall(UI.RefreshRight, UI) end
+    end)
+  end
+end
 -- Wire Actions specific events (UI-only; no commit logic yet)
 function DT:_WireActionsEvents(drawer, controls)
   -- Keep ultra-safe: no commits, no DB writes, no Move calls.

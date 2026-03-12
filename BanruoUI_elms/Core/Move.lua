@@ -123,6 +123,139 @@ end
 
 
 -- ------------------------------------------------------------
+-- Flip Card runtime (v1): one-shot flip between front/back.
+-- Runtime animation does not write DB per frame.
+-- ------------------------------------------------------------
+M._flipping = M._flipping or nil -- [id] -> state
+
+local function _flipFace(v)
+  return (v == "back") and "back" or "front"
+end
+
+local function _flipPath(el, face)
+  local flip = type(el.flip) == "table" and el.flip or nil
+  if not flip then return "" end
+  if face == "back" then
+    return tostring(flip.backPath or "")
+  end
+  return tostring(flip.frontPath or "")
+end
+
+local function _flipSetTexture(frame, path)
+  if not (frame and frame._tex) then return end
+  local tex = frame._tex
+  local p = tostring(path or "")
+  p = p:gsub("^%s+", ""):gsub("%s+$", "")
+  p = p:gsub("/", "\\")
+  local ok = false
+  if p ~= "" then
+    ok = pcall(tex.SetTexture, tex, p)
+  end
+  if not ok then
+    tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+  end
+end
+
+local function _ensureFlipDriver(self)
+  if self._flipDriver then return end
+  local d = CreateFrame("Frame", nil, UIParent)
+  d:Hide()
+  d:SetScript("OnUpdate", function()
+    if not (M._flipping and next(M._flipping)) then
+      d:Hide()
+      M._flipping = nil
+      return
+    end
+
+    local now = GetTime and GetTime() or 0
+    for id, st in pairs(M._flipping) do
+      local f = M._regions and M._regions[id] or nil
+      if not (f and f._tex and f._tex.SetScale) then
+        M._flipping[id] = nil
+      else
+        local startT = tonumber(st.startT) or now
+        local dur = tonumber(st.duration) or 0.35
+        if dur < 0.05 then dur = 0.05 end
+        local p = (now - startT) / dur
+        if p < 0 then p = 0 end
+
+        if p >= 1 then
+          _flipSetTexture(f, st.targetPath)
+          f._tex:SetScale(1)
+
+          local data = GetData and GetData(id) or nil
+          if type(data) == "table" then
+            data.flip = type(data.flip) == "table" and data.flip or {}
+            data.flip.currentFace = _flipFace(st.targetFace)
+            data.flip.isFlipping = false
+            SetData(id, data)
+          end
+          M._flipping[id] = nil
+        else
+          local scaleX = math.abs(math.cos(math.pi * p))
+          if scaleX < 0.02 then scaleX = 0.02 end
+          f._tex:SetScale(scaleX)
+
+          if (not st.swapped) and p >= 0.5 then
+            st.swapped = true
+            _flipSetTexture(f, st.targetPath)
+          end
+        end
+      end
+    end
+
+    if not next(M._flipping or {}) then
+      M._flipping = nil
+      d:Hide()
+    end
+  end)
+  self._flipDriver = d
+end
+
+local function _syncFlipRuntime(self, id, el, f)
+  if type(id) ~= "string" or type(el) ~= "table" or not f or not f._tex then return end
+  if el.regionType ~= "flipcard" then
+    if self._flipping then self._flipping[id] = nil end
+    if f._tex.SetScale then f._tex:SetScale(1) end
+    return
+  end
+
+  local flip = type(el.flip) == "table" and el.flip or {}
+  local curFace = _flipFace(flip.currentFace)
+  local isFlipping = flip.isFlipping and true or false
+  local dur = tonumber(flip.duration) or 0.35
+  if dur < 0.05 then dur = 0.05 end
+  if dur > 3 then dur = 3 end
+
+  local curPath = _flipPath(el, curFace)
+  local targetFace = (curFace == "front") and "back" or "front"
+  local targetPath = _flipPath(el, targetFace)
+
+  if not isFlipping then
+    if self._flipping then self._flipping[id] = nil end
+    _flipSetTexture(f, curPath)
+    if f._tex.SetScale then f._tex:SetScale(1) end
+    return
+  end
+
+  _ensureFlipDriver(self)
+  self._flipping = self._flipping or {}
+  if self._flipping[id] then return end
+
+  _flipSetTexture(f, curPath)
+  if f._tex.SetScale then f._tex:SetScale(1) end
+
+  self._flipping[id] = {
+    startT = GetTime and GetTime() or 0,
+    duration = dur,
+    targetFace = targetFace,
+    targetPath = targetPath,
+    swapped = false,
+  }
+
+  if self._flipDriver then self._flipDriver:Show() end
+end
+-- ------------------------------------------------------------
 -- Editor-facing commits (via Gate)
 -- ------------------------------------------------------------
 
@@ -1361,9 +1494,30 @@ f:Show()
 
 
 
+  -- FlipCard runtime (one-shot trigger + stable final face)
+  _syncFlipRuntime(self, id, el, f)
+
   -- Output Actions: rotate runtime (continuous)
   _syncRotateRuntime(self, id, el)
   f:Show()
+end
+
+function M:TriggerFlipOnce(id)
+  if type(id) ~= "string" or id == "" then return false end
+  local data = GetData and GetData(id) or nil
+  if type(data) ~= "table" then return false end
+  if data.regionType ~= "flipcard" then return false end
+
+  data.flip = type(data.flip) == "table" and data.flip or {}
+  data.flip.currentFace = _flipFace(data.flip.currentFace)
+  data.flip.isFlipping = true
+  if type(data.flip.duration) ~= "number" then data.flip.duration = 0.35 end
+
+  SetData(id, data)
+  if self.Refresh then
+    pcall(function() self:Refresh(id) end)
+  end
+  return true
 end
 
 function M:RestoreAll()
