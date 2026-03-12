@@ -123,7 +123,7 @@ end
 
 
 -- ------------------------------------------------------------
--- Flip Card runtime (v1.1): staged simulated flip (fold + perspective + shade).
+-- Flip Card runtime (v1.2): dual-face + perspective fold + shade + gloss sweep.
 -- Runtime animation does not write DB per frame.
 -- ------------------------------------------------------------
 M._flipping = M._flipping or nil -- [id] -> state
@@ -141,9 +141,8 @@ local function _flipPath(el, face)
   return tostring(flip.frontPath or "")
 end
 
-local function _flipSetTexture(frame, path)
-  if not (frame and frame._tex) then return end
-  local tex = frame._tex
+local function _flipSetTextureOn(tex, path)
+  if not tex then return end
   local p = tostring(path or "")
   p = p:gsub("^%s+", ""):gsub("%s+$", "")
   p = p:gsub("/", "\\")
@@ -151,7 +150,7 @@ local function _flipSetTexture(frame, path)
   if p ~= "" then
     ok = pcall(tex.SetTexture, tex, p)
   end
-  if not ok then
+  if not ok and tex.SetTexture then
     tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
   end
 end
@@ -163,78 +162,188 @@ local function _flipClamp(v, lo, hi)
   return v
 end
 
-local function _flipEaseOutBack(t, s)
-  t = _flipClamp(t, 0, 1)
-  s = tonumber(s) or 1.15
-  local u = t - 1
-  return 1 + (s + 1) * u * u * u + s * u * u
+local function _flipCosVisible(p)
+  p = _flipClamp(p, 0, 1)
+  local theta = math.pi * p
+  local vis = math.abs(math.cos(theta))
+  if vis < 0.01 then vis = 0.01 end
+  return vis, theta
 end
 
-local function _flipEnsureShade(frame)
+local function _flipEnsureLayers(frame)
+  if not frame then return nil, nil end
+
+  if not frame._tex then
+    local tex = frame:CreateTexture(nil, "ARTWORK")
+    tex:SetAllPoints()
+    tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    frame._tex = tex
+  end
+
+  if not frame._flipFrontTex then
+    frame._flipFrontTex = frame._tex
+  end
+
+  if not frame._flipBackTex then
+    local back = frame:CreateTexture(nil, "ARTWORK")
+    back:SetAllPoints()
+    back:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+    back:Hide()
+    frame._flipBackTex = back
+  end
+
+  if not frame._flipShade then
+    local shade = frame:CreateTexture(nil, "OVERLAY")
+    shade:SetAllPoints(frame)
+    shade:SetColorTexture(0, 0, 0, 0)
+    shade:Hide()
+    frame._flipShade = shade
+  end
+
+  if not frame._flipGloss then
+    local gloss = frame:CreateTexture(nil, "OVERLAY")
+    gloss:SetColorTexture(1, 1, 1, 1)
+    gloss:SetBlendMode("ADD")
+    gloss:Hide()
+    frame._flipGloss = gloss
+  end
+
+  return frame._flipFrontTex, frame._flipBackTex
+end
+
+local function _flipFaceTex(frame, face)
   if not frame then return nil end
-  if frame._flipShade then return frame._flipShade end
-  local shade = frame:CreateTexture(nil, "OVERLAY")
-  shade:SetAllPoints(frame)
-  shade:SetColorTexture(0, 0, 0, 0)
-  shade:Hide()
-  frame._flipShade = shade
-  return shade
+  if face == "back" then return frame._flipBackTex end
+  return frame._flipFrontTex or frame._tex
 end
 
-local function _flipResetVisual(frame)
-  if not (frame and frame._tex) then return end
-  local tex = frame._tex
+local function _flipSetFaceVisible(frame, face)
+  if not frame then return end
+  local front, back = _flipEnsureLayers(frame)
+  face = _flipFace(face)
+  if face == "back" then
+    if front and front.Hide then front:Hide() end
+    if back and back.Show then back:Show() end
+  else
+    if back and back.Hide then back:Hide() end
+    if front and front.Show then front:Show() end
+  end
+  frame._flipVisibleFace = face
+end
+
+local function _flipResetTex(tex, frame)
+  if not tex then return end
   if tex.SetScale then tex:SetScale(1) end
   if tex.SetTexCoord then
     pcall(tex.SetTexCoord, tex, 0, 1, 0, 1)
   end
+  if tex.ClearAllPoints then tex:ClearAllPoints() end
+  if frame and tex.SetAllPoints then
+    tex:SetAllPoints(frame)
+  end
+end
+
+local function _flipApplyAxisScale(tex, frame, axis, vis)
+  if not (tex and frame) then return end
+  local w, h = frame:GetSize()
+  w = tonumber(w) or 64
+  h = tonumber(h) or 64
+  vis = _flipClamp(vis, 0.01, 1)
+
+  if tex.ClearAllPoints then tex:ClearAllPoints() end
+  if tex.SetPoint then tex:SetPoint("CENTER", frame, "CENTER", 0, 0) end
+
+  if axis == "x" then
+    if tex.SetSize then tex:SetSize(w, math.max(1, h * vis)) end
+  else
+    if tex.SetSize then tex:SetSize(math.max(1, w * vis), h) end
+  end
+end
+
+local function _flipApplyMaterial(tex, alpha, blendMode)
+  if not tex then return end
+  if tex.SetAlpha then tex:SetAlpha(alpha or 1) end
+  if blendMode and tex.SetBlendMode then
+    pcall(tex.SetBlendMode, tex, blendMode)
+  end
+end
+
+local function _flipSetFaceTextures(frame, frontPath, backPath)
+  local front, back = _flipEnsureLayers(frame)
+  _flipSetTextureOn(front, frontPath)
+  _flipSetTextureOn(back, backPath)
+end
+
+local function _flipResetVisual(frame)
+  if not frame then return end
+  local front, back = _flipEnsureLayers(frame)
+  _flipResetTex(front, frame)
+  _flipResetTex(back, frame)
+
   local shade = frame._flipShade
   if shade then
     shade:SetAlpha(0)
     shade:Hide()
   end
+
+  local gloss = frame._flipGloss
+  if gloss then
+    gloss:SetAlpha(0)
+    gloss:Hide()
+  end
 end
 
-local function _flipBuildTexCoord(axis, pivot, visible, perspective)
-  local vis = _flipClamp(visible, 0.02, 1)
+local function _flipTeardown(frame)
+  if not frame then return end
+  if not (frame._flipFrontTex or frame._flipBackTex or frame._flipShade or frame._flipGloss) then return end
+  _flipResetVisual(frame)
+  if frame._flipBackTex then frame._flipBackTex:Hide() end
+  if frame._flipGloss then frame._flipGloss:Hide() end
+  if frame._flipShade then frame._flipShade:Hide() end
+  if frame._flipFrontTex and frame._flipFrontTex.Show then frame._flipFrontTex:Show() end
+  frame._flipVisibleFace = "front"
+end
+
+local function _flipBuildTexCoord(axis, pivot, visible, perspective, fold)
+  local vis = _flipClamp(visible, 0.01, 1)
   local persp = _flipClamp(perspective, 0, 1)
+  local fd = _flipClamp(fold, 0.7, 1.6)
+  local bend = (1 - (vis ^ 0.72)) * persp * fd * 0.22
 
   if axis == "x" then
     local half = 0.5 * vis
     local t = 0.5 - half
     local b = 0.5 + half
-    local skew = (1 - vis) * persp * 0.18
     if pivot == "top" then
       return {
         ulx = 0, uly = t,
-        llx = skew, lly = b,
+        llx = bend, lly = b,
         urx = 1, ury = t,
-        lrx = 1 - skew, lry = b,
+        lrx = 1 - bend, lry = b,
       }
     elseif pivot == "bottom" then
       return {
-        ulx = skew, uly = t,
+        ulx = bend, uly = t,
         llx = 0, lly = b,
-        urx = 1 - skew, ury = t,
+        urx = 1 - bend, ury = t,
         lrx = 1, lry = b,
       }
     end
     return {
-      ulx = skew * 0.5, uly = t,
-      llx = skew * 0.5, lly = b,
-      urx = 1 - skew * 0.5, ury = t,
-      lrx = 1 - skew * 0.5, lry = b,
+      ulx = bend * 0.5, uly = t,
+      llx = bend * 0.5, lly = b,
+      urx = 1 - bend * 0.5, ury = t,
+      lrx = 1 - bend * 0.5, lry = b,
     }
   end
 
   local half = 0.5 * vis
   local l = 0.5 - half
   local r = 0.5 + half
-  local skew = (1 - vis) * persp * 0.18
   if pivot == "left" then
     return {
-      ulx = l, uly = skew,
-      llx = l, lly = 1 - skew,
+      ulx = l, uly = bend,
+      llx = l, lly = 1 - bend,
       urx = r, ury = 0,
       lrx = r, lry = 1,
     }
@@ -242,23 +351,64 @@ local function _flipBuildTexCoord(axis, pivot, visible, perspective)
     return {
       ulx = l, uly = 0,
       llx = l, lly = 1,
-      urx = r, ury = skew,
-      lrx = r, lry = 1 - skew,
+      urx = r, ury = bend,
+      lrx = r, lry = 1 - bend,
     }
   end
   return {
-    ulx = l, uly = skew * 0.5,
-    llx = l, lly = 1 - skew * 0.5,
-    urx = r, ury = skew * 0.5,
-    lrx = r, lry = 1 - skew * 0.5,
+    ulx = l, uly = bend * 0.5,
+    llx = l, lly = 1 - bend * 0.5,
+    urx = r, ury = bend * 0.5,
+    lrx = r, lry = 1 - bend * 0.5,
   }
 end
+local function _flipApplyGloss(frame, st, p, vis)
+  local gloss = frame and frame._flipGloss
+  if not gloss then return end
 
-local function _flipApplyVisual(frame, st, visible)
-  if not (frame and frame._tex) then return end
-  local tex = frame._tex
+  local peak = 1 - math.abs((p - 0.5) / 0.5)
+  if peak < 0 then peak = 0 end
+  peak = peak * peak
 
-  local vis = _flipClamp(visible, 0.02, 1.1)
+  local alpha = peak * (st.glossAlpha or 0.22) * _flipClamp(1 - math.abs(vis - 0.08), 0.25, 1)
+  if alpha < 0.01 then
+    gloss:SetAlpha(0)
+    gloss:Hide()
+    return
+  end
+
+  local w, h = frame:GetSize()
+  w = tonumber(w) or 64
+  h = tonumber(h) or 64
+
+  local axis = (st.axis == "x") and "x" or "y"
+  local sweep = (p * 2) - 1
+  local bias = (st.swapped and 1) or -1
+  local t = sweep * bias
+
+  if axis == "y" then
+    local bw = math.max(6, w * 0.22)
+    gloss:ClearAllPoints()
+    gloss:SetPoint("TOP", frame, "TOP", t * w * 0.42, 0)
+    gloss:SetPoint("BOTTOM", frame, "BOTTOM", t * w * 0.42, 0)
+    gloss:SetWidth(bw)
+  else
+    local bh = math.max(6, h * 0.22)
+    gloss:ClearAllPoints()
+    gloss:SetPoint("LEFT", frame, "LEFT", 0, t * h * 0.42)
+    gloss:SetPoint("RIGHT", frame, "RIGHT", 0, t * h * 0.42)
+    gloss:SetHeight(bh)
+  end
+
+  gloss:SetAlpha(alpha)
+  gloss:Show()
+end
+
+local function _flipApplyVisual(frame, st, visible, p)
+  if not frame then return end
+  local front, back = _flipEnsureLayers(frame)
+
+  local vis = _flipClamp(visible, 0.01, 1)
   local axis = (st.axis == "x") and "x" or "y"
   local pivot = tostring(st.pivot or "center")
 
@@ -269,24 +419,24 @@ local function _flipApplyVisual(frame, st, visible)
     pivot = "center"
   end
 
-  local coord = _flipBuildTexCoord(axis, pivot, math.min(vis, 1), st.perspective or 0)
-  if tex.SetTexCoord and coord then
-    pcall(tex.SetTexCoord, tex,
-      coord.ulx, coord.uly,
-      coord.llx, coord.lly,
-      coord.urx, coord.ury,
-      coord.lrx, coord.lry)
-  end
+  local activeFace = st.swapped and st.targetFace or st.sourceFace
+  _flipSetFaceVisible(frame, activeFace)
 
-  local texScale = 1
-  if vis > 1 then
-    texScale = 1 + (vis - 1) * 0.4
-  end
-  if tex.SetScale then tex:SetScale(texScale) end
+  local active = _flipFaceTex(frame, activeFace)
+  local inactive = (active == front) and back or front
 
-  local shade = _flipEnsureShade(frame)
+  _flipResetTex(inactive, frame)
+
+  -- Zero-stretch mode: use axis scaling instead of texcoord warp.
+  if active and active.SetTexCoord then
+    pcall(active.SetTexCoord, active, 0, 1, 0, 1)
+  end
+  _flipApplyAxisScale(active, frame, axis, vis)
+
+  local shade = frame._flipShade
   if shade then
-    local shadeAlpha = (1 - math.min(vis, 1)) * _flipClamp(st.shadow or 0, 0, 1)
+    local phase = math.sin(math.pi * _flipClamp(p, 0, 1))
+    local shadeAlpha = (1 - vis) * _flipClamp(st.shadow or 0, 0, 1) * (0.2 + 0.8 * phase)
     if shadeAlpha > 0.005 then
       shade:SetAlpha(shadeAlpha)
       shade:Show()
@@ -295,8 +445,9 @@ local function _flipApplyVisual(frame, st, visible)
       shade:Hide()
     end
   end
-end
 
+  _flipApplyGloss(frame, st, p, vis)
+end
 local function _ensureFlipDriver(self)
   if self._flipDriver then return end
   local d = CreateFrame("Frame", nil, UIParent)
@@ -311,7 +462,7 @@ local function _ensureFlipDriver(self)
     local now = GetTime and GetTime() or 0
     for id, st in pairs(M._flipping) do
       local f = M._regions and M._regions[id] or nil
-      if not (f and f._tex) then
+      if not f then
         M._flipping[id] = nil
       else
         local startT = tonumber(st.startT) or now
@@ -320,8 +471,11 @@ local function _ensureFlipDriver(self)
         if p < 0 then p = 0 end
 
         if p >= 1 then
-          _flipSetTexture(f, st.targetPath)
+          _flipSetFaceVisible(f, st.targetFace)
           _flipResetVisual(f)
+
+          local faceTex = _flipFaceTex(f, st.targetFace)
+          if faceTex then _flipApplyMaterial(faceTex, st.alpha, st.blendMode) end
 
           local data = GetData and GetData(id) or nil
           if type(data) == "table" then
@@ -332,23 +486,14 @@ local function _ensureFlipDriver(self)
           end
           M._flipping[id] = nil
         else
-          local vis
-          if p < 0.45 then
-            local q = p / 0.45
-            vis = 1 - (q * q * q)
-          elseif p < 0.55 then
-            vis = 0.02
-          else
-            local q = (p - 0.55) / 0.45
-            vis = _flipEaseOutBack(q, st.overshootAmp or 1.15)
-          end
-
+          local vis = _flipCosVisible(p)
           if (not st.swapped) and p >= 0.5 then
             st.swapped = true
-            _flipSetTexture(f, st.targetPath)
           end
 
-          _flipApplyVisual(f, st, vis)
+          _flipApplyVisual(f, st, vis, p)
+          local active = _flipFaceTex(f, st.swapped and st.targetFace or st.sourceFace)
+          if active then _flipApplyMaterial(active, st.alpha, st.blendMode) end
         end
       end
     end
@@ -362,10 +507,10 @@ local function _ensureFlipDriver(self)
 end
 
 local function _syncFlipRuntime(self, id, el, f)
-  if type(id) ~= "string" or type(el) ~= "table" or not f or not f._tex then return end
+  if type(id) ~= "string" or type(el) ~= "table" or not f then return end
   if el.regionType ~= "flipcard" then
     if self._flipping then self._flipping[id] = nil end
-    _flipResetVisual(f)
+    _flipTeardown(f)
     return
   end
 
@@ -382,15 +527,22 @@ local function _syncFlipRuntime(self, id, el, f)
 
   local perspective = _flipClamp(tonumber(flip.perspective) or 0.45, 0, 1)
   local shadow = _flipClamp(tonumber(flip.shadow) or 0.4, 0, 1)
-  local overshoot = _flipClamp(tonumber(flip.overshoot) or 0.08, 0, 0.2)
-
-  local curPath = _flipPath(el, curFace)
+  local frontPath = _flipPath(el, "front")
+  local backPath = _flipPath(el, "back")
   local targetFace = (curFace == "front") and "back" or "front"
-  local targetPath = _flipPath(el, targetFace)
+
+  local region = type(el.region) == "table" and el.region or {}
+  local alpha = tonumber(el.alpha) or 1
+  local blendMode = region.blendMode
+
+  _flipSetFaceTextures(f, frontPath, backPath)
+  local front, back = _flipEnsureLayers(f)
+  _flipApplyMaterial(front, alpha, blendMode)
+  _flipApplyMaterial(back, alpha, blendMode)
 
   if not isFlipping then
     if self._flipping then self._flipping[id] = nil end
-    _flipSetTexture(f, curPath)
+    _flipSetFaceVisible(f, curFace)
     _flipResetVisual(f)
     return
   end
@@ -399,19 +551,21 @@ local function _syncFlipRuntime(self, id, el, f)
   self._flipping = self._flipping or {}
   if self._flipping[id] then return end
 
-  _flipSetTexture(f, curPath)
+  _flipSetFaceVisible(f, curFace)
   _flipResetVisual(f)
 
   self._flipping[id] = {
     startT = GetTime and GetTime() or 0,
     duration = dur,
+    sourceFace = curFace,
     targetFace = targetFace,
-    targetPath = targetPath,
     axis = axis,
     pivot = pivot,
     perspective = perspective,
     shadow = shadow,
-    overshootAmp = 1 + (overshoot * 8),
+    glossAlpha = _flipClamp(0.12 + perspective * 0.28, 0.06, 0.42),
+    blendMode = blendMode,
+    alpha = alpha,
     swapped = false,
   }
 
