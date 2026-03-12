@@ -1,14 +1,16 @@
-﻿param(
+param(
   [string]$TitleZhInput = '',
   [string]$TitleEnInput = '',
   [string]$AuthorInput = '',
-  [string]$VersionInput = ''
+  [string]$VersionInput = '',
+  [string]$InterfaceInput = '',
+  [switch]$NoPrompt
 )
 
+$ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [Console]::OutputEncoding
-$ErrorActionPreference = 'Stop'
 
 function Clean([string]$s) {
   if ($null -eq $s) { return '' }
@@ -31,6 +33,14 @@ function GetMetaValue([string]$raw, [string]$key) {
   $v = $v -replace '\\\\', '\'
   $v = $v -replace '\\"', '"'
   return $v
+}
+
+function GetTocValue([string]$raw, [string]$key) {
+  if ([string]::IsNullOrEmpty($raw)) { return '' }
+  $pat = '(?m)^##\s*' + [regex]::Escape($key) + '\s*:\s*(.*)$'
+  $m = [regex]::Match($raw, $pat)
+  if (-not $m.Success) { return '' }
+  return $m.Groups[1].Value.Trim()
 }
 
 function NewLuaLongWrap([string]$s) {
@@ -67,10 +77,13 @@ $themeId = ([regex]::Replace($suffix.ToLowerInvariant(), '[^a-z0-9]+', '_')).Tri
 if ($themeId -eq '') { $themeId = 'theme' }
 
 $rawMeta = [System.IO.File]::ReadAllText($metaPath, [System.Text.Encoding]::UTF8)
+$rawToc = [System.IO.File]::ReadAllText($tocPath, [System.Text.Encoding]::UTF8)
 $exTitleZh = GetMetaValue $rawMeta 'titleZhCN'
 $exTitleEn = GetMetaValue $rawMeta 'titleEnUS'
 $exAuthor = GetMetaValue $rawMeta 'author'
 $exVersion = GetMetaValue $rawMeta 'version'
+$exTocVersion = GetTocValue $rawToc 'Version'
+$exInterface = GetTocValue $rawToc 'Interface'
 
 $enFallback = 'BanruoUI [' + $suffix + ']'
 $zhFallback = $suffix
@@ -90,26 +103,36 @@ Write-Host ''
 $curTitleZh = if ($exTitleZh -ne '') { $exTitleZh } else { $zhFallback }
 $curTitleEn = if ($exTitleEn -ne '') { $exTitleEn } else { $enFallback }
 $curAuthor = if ($exAuthor -ne '') { $exAuthor } else { 'BanruoUI' }
-$curVersion = if ($exVersion -ne '') { $exVersion } else { '1.0.0' }
+$curVersion = if ($exTocVersion -ne '') { $exTocVersion } elseif ($exVersion -ne '') { $exVersion } else { '1.0.0' }
+$curInterface = if ($exInterface -ne '') { $exInterface } else { '120001,120000' }
 
-if ($locMode -eq 'zh' -and [string]::IsNullOrWhiteSpace($TitleZhInput)) {
-  $TitleZhInput = Read-Host ('中文标题（留空保留当前） [当前: ' + $curTitleZh + ']')
-}
-if ($locMode -eq 'en' -and [string]::IsNullOrWhiteSpace($TitleEnInput)) {
-  $TitleEnInput = Read-Host ('En title (blank keep current) [current: ' + $curTitleEn + ']')
-}
-if ([string]::IsNullOrWhiteSpace($AuthorInput)) {
-  if ($locMode -eq 'zh') {
-    $AuthorInput = Read-Host ('作者（留空保留当前） [当前: ' + $curAuthor + ']')
-  } else {
-    $AuthorInput = Read-Host ('Author (blank keep current) [current: ' + $curAuthor + ']')
+if (-not $NoPrompt) {
+  if ($locMode -eq 'zh' -and [string]::IsNullOrWhiteSpace($TitleZhInput)) {
+    $TitleZhInput = Read-Host ('中文标题（留空保留当前） [当前: ' + $curTitleZh + ']')
   }
-}
-if ([string]::IsNullOrWhiteSpace($VersionInput)) {
-  if ($locMode -eq 'zh') {
-    $VersionInput = Read-Host ('版本号（留空保留当前） [当前: ' + $curVersion + ']')
-  } else {
-    $VersionInput = Read-Host ('Version (blank keep current) [current: ' + $curVersion + ']')
+  if ($locMode -eq 'en' -and [string]::IsNullOrWhiteSpace($TitleEnInput)) {
+    $TitleEnInput = Read-Host ('En title (blank keep current) [current: ' + $curTitleEn + ']')
+  }
+  if ([string]::IsNullOrWhiteSpace($AuthorInput)) {
+    if ($locMode -eq 'zh') {
+      $AuthorInput = Read-Host ('作者（留空保留当前） [当前: ' + $curAuthor + ']')
+    } else {
+      $AuthorInput = Read-Host ('Author (blank keep current) [current: ' + $curAuthor + ']')
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($VersionInput)) {
+    if ($locMode -eq 'zh') {
+      $VersionInput = Read-Host ('插件版本号 Version（留空保留当前） [当前: ' + $curVersion + ']')
+    } else {
+      $VersionInput = Read-Host ('Addon Version (blank keep current) [current: ' + $curVersion + ']')
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($InterfaceInput)) {
+    if ($locMode -eq 'zh') {
+      $InterfaceInput = Read-Host ('游戏版本号 Interface（留空保留当前） [当前: ' + $curInterface + ']')
+    } else {
+      $InterfaceInput = Read-Host ('Game Interface (blank keep current) [current: ' + $curInterface + ']')
+    }
   }
 }
 
@@ -118,7 +141,8 @@ $titleEn = if (-not [string]::IsNullOrWhiteSpace($TitleEnInput)) { Clean $TitleE
 if ($locMode -eq 'zh' -and $titleEn -eq '') { $titleEn = $enFallback }
 if ($locMode -eq 'en' -and $titleZh -eq '') { $titleZh = $zhFallback }
 $author = if (-not [string]::IsNullOrWhiteSpace($AuthorInput)) { Clean $AuthorInput } elseif ($exAuthor -ne '') { $exAuthor } else { 'BanruoUI' }
-$version = if (-not [string]::IsNullOrWhiteSpace($VersionInput)) { Clean $VersionInput } elseif ($exVersion -ne '') { $exVersion } else { '1.0.0' }
+$version = if (-not [string]::IsNullOrWhiteSpace($VersionInput)) { Clean $VersionInput } else { $curVersion }
+$interface = if (-not [string]::IsNullOrWhiteSpace($InterfaceInput)) { Clean $InterfaceInput } else { $curInterface }
 
 $themeName = $addonDir
 $breId = 'banruoui_' + $themeId + '_bre_main'
@@ -150,6 +174,7 @@ $metaLines = @(
 
 $tocRaw = [System.IO.File]::ReadAllText($tocPath, [System.Text.Encoding]::UTF8)
 $map = [ordered]@{
+  'Interface' = $interface
   'Title' = $addonDir
   'Title-zhCN' = $titleZh
   'Title-enUS' = $titleEn
@@ -208,8 +233,7 @@ Write-Host ''
 Write-Host '=== Update Summary ==='
 Write-Host ('ThemeMeta : ' + $metaPath)
 Write-Host ('TOC       : ' + $tocPath)
+Write-Host ('Version   : ' + $version)
+Write-Host ('Interface : ' + $interface)
 Write-Host ('BRE       : ' + $breStatus + ' (' + $breFile + ')')
 Write-Host ('ElvUI     : ' + $elvStatus + ' (Data_ElvUI.lua)')
-
-
-
