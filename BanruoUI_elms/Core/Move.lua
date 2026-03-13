@@ -619,10 +619,49 @@ local function _flipResetVisual(frame)
   end
 end
 
+local function _flipEnsureClickOverlay(frame, id)
+  if not frame then return end
+
+  if not frame._flipClickBtn then
+    local btn = CreateFrame("Button", nil, frame)
+    btn:SetAllPoints(frame)
+    btn:RegisterForClicks("LeftButtonUp")
+    btn:SetScript("OnClick", function(selfBtn)
+      local nodeId = selfBtn and selfBtn._flipNodeId
+      if type(nodeId) ~= "string" or nodeId == "" then return end
+      if M and M.TriggerFlipOnce then
+        pcall(M.TriggerFlipOnce, M, nodeId)
+      end
+    end)
+    frame._flipClickBtn = btn
+  end
+
+  local btn = frame._flipClickBtn
+  btn._flipNodeId = id
+  btn:ClearAllPoints()
+  btn:SetAllPoints(frame)
+  if btn.SetFrameStrata and frame.GetFrameStrata then
+    pcall(btn.SetFrameStrata, btn, frame:GetFrameStrata())
+  end
+  if btn.SetFrameLevel and frame.GetFrameLevel then
+    pcall(btn.SetFrameLevel, btn, (frame:GetFrameLevel() or 1) + 8)
+  end
+  btn:EnableMouse(true)
+  btn:Show()
+end
+
+local function _flipHideClickOverlay(frame)
+  local btn = frame and frame._flipClickBtn
+  if not btn then return end
+  btn._flipNodeId = nil
+  btn:Hide()
+end
+
 local function _flipTeardown(frame)
   if not frame then return end
-  if not (frame._flipFrontTex or frame._flipBackTex or frame._flipShade or frame._flipGloss or frame._flipSpark or frame._flipEdge) then return end
+  if not (frame._flipFrontTex or frame._flipBackTex or frame._flipShade or frame._flipGloss or frame._flipSpark or frame._flipEdge or frame._flipClickBtn) then return end
   _flipResetVisual(frame)
+  _flipHideClickOverlay(frame)
   if frame._flipBackTex then frame._flipBackTex:Hide() end
   if frame._flipGloss then frame._flipGloss:Hide() end
   if frame._flipSpark then frame._flipSpark:Hide() end
@@ -1030,6 +1069,8 @@ local function _syncFlipRuntime(self, id, el, f)
     _flipTeardown(f)
     return
   end
+
+  _flipEnsureClickOverlay(f, id)
 
   local flip = type(el.flip) == "table" and el.flip or {}
   local curFace = _flipFace(flip.currentFace)
@@ -3636,4 +3677,5 @@ function M:DuplicateSubtree(sourceId)
 
   return newRootId
 end
+
 
